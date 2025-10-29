@@ -59,7 +59,6 @@
             color: var(--text-light);
         }
 
-        /* MELHORIA: Botão de Configurações posicionado no rodapé */
         footer {
             text-align: center;
             margin-top: 30px;
@@ -152,7 +151,6 @@
             background-color: #004a80;
         }
         
-        /* Botões de Ação Específicos */
         .btn-secondary {
             background-color: #6c757d;
         }
@@ -174,20 +172,17 @@
             background-color: #c82333;
         }
         
-        /* Ajusta o botão "Adicionar" */
         #add-employee-btn {
             width: auto; 
             white-space: nowrap; 
         }
 
-        /* Layout dos campos de horário */
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px 20px;
         }
 
-        /* Seção de Resultados */
         .results-summary {
             display: flex;
             justify-content: space-around;
@@ -220,7 +215,6 @@
             font-size: 1.4em !important;
         }
 
-        /* Tabela de Histórico */
         .table-container {
             width: 100%;
             overflow-x: auto; 
@@ -244,7 +238,6 @@
             font-weight: 500;
         }
         
-        /* --- MELHORIA DE EDIÇÃO: Linhas clicáveis --- */
         #entry-log tbody tr {
             cursor: pointer;
             transition: background-color 0.2s ease;
@@ -253,10 +246,8 @@
         #entry-log tbody tr:hover {
             background-color: var(--secondary-color);
         }
-        /* --- Fim da Melhoria --- */
 
 
-        /* Classes de utilidade */
         .text-danger {
             color: var(--danger-color);
             font-weight: 500;
@@ -267,7 +258,6 @@
             font-weight: 500;
         }
         
-        /* --- Estilos do Modal de Configurações --- */
         .modal {
             display: none; 
             position: fixed; 
@@ -317,7 +307,6 @@
             cursor: pointer;
         }
         
-        /* NOVO: Seletor de funcionário para impressão e PDF */
         .report-actions {
             display: flex;
             align-items: center;
@@ -336,10 +325,8 @@
         .report-actions button {
             width: auto;
         }
-        /* --- Fim dos Estilos do Modal --- */
 
 
-        /* Responsividade */
         @media (max-width: 600px) {
             .form-grid {
                 grid-template-columns: 1fr;
@@ -367,15 +354,12 @@
             }
         }
         
-        /* --- MELHORIA: Estilos de Impressão Ajustados --- */
         @media print {
-            /* Esconde elementos indesejados (header, inputs, modal, botão de config) */
             header, #employee-manager, #time-entry-card, #settings-modal, footer,
             #total-worked, #standard-worked, #overtime-total, .report-actions {
                 display: none;
             }
 
-            /* Mostra o container e o card de resultados e ajusta para impressão */
             .container, #results-card {
                 display: block;
                 width: 100%;
@@ -386,12 +370,10 @@
                 border: none;
             }
             
-            /* Garante que o sumário (para o total acumulado) e a tabela sejam visíveis */
             .results-summary, .table-container {
                 display: block;
             }
             
-            /* Remove o fundo e borda do sumário na impressão */
             .results-summary {
                  background-color: #FFF;
                  border: none;
@@ -399,7 +381,6 @@
                  justify-content: flex-start;
             }
             
-            /* Ajusta o Total Acumulado para impressão */
             #total-overtime-history {
                 text-align: left;
                 padding-top: 0;
@@ -408,13 +389,11 @@
                 font-size: 1.3em !important; 
             }
             
-            /* Remove margens dos títulos */
             #results-card h2, #results-card h3 {
                 margin-top: 0;
                 padding-bottom: 5px;
             }
             
-            /* Melhora a aparência da tabela na impressão */
             table {
                 border: 1px solid #000;
             }
@@ -570,11 +549,9 @@
             const pdfReportBtn = document.getElementById('pdf-report-btn');
             const reportEmployeeSelect = document.getElementById('report-employee-select');
             
-            // Referências de Configurações (dentro do modal)
             const backupBtn = document.getElementById('backup-btn');
             const clearBtn = document.getElementById('clear-btn');
             
-            // Referências do Modal
             const settingsModal = document.getElementById('settings-modal');
             const openSettingsBtn = document.getElementById('open-settings-btn');
             const closeModalBtn = document.getElementById('modal-close-btn');
@@ -584,6 +561,8 @@
                 employees: [],
                 entries: {} 
             };
+            
+            let currentEditingDate = null;
 
             // === FUNÇÕES AUXILIARES ===
 
@@ -627,7 +606,6 @@
                 });
             }
             
-            // NOVA FUNÇÃO: Preenche o seletor de funcionários para relatórios
             function populateReportEmployeeSelect() {
                 reportEmployeeSelect.innerHTML = '<option value="">-- Selecione um funcionário --</option>';
                 db.employees.forEach(name => {
@@ -647,8 +625,8 @@
                     resultsCard.style.display = 'block';
                     populateEntryLog(selectedName);
                     
-                    // *** MELHORIA DE EDIÇÃO: Reseta o botão ao trocar de funcionário ***
                     calculateBtn.textContent = 'Lançar e Calcular';
+                    currentEditingDate = null;
                 } else {
                     timeEntryCard.style.display = 'none';
                     resultsCard.style.display = 'none';
@@ -661,13 +639,13 @@
                 
                 let totalOvertimeAllEntries = 0;
 
-                entries.sort((a, b) => new Date(b.date) - new Date(a.date));
+                // *** MELHORIA APLICADA: Organiza pela data mais antiga (crescente) ***
+                entries.sort((a, b) => new Date(a.date) - new Date(b.date));
 
                 if (entries.length === 0) {
                     entryLogBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nenhum lançamento encontrado.</td></tr>';
                     totalOvertimeHistoryEl.textContent = 'Total Acumulado: 00:00';
                     totalOvertimeHistoryEl.className = 'highlight';
-                    // Limpa os totais do dia se não houver lançamentos
                     totalWorkedEl.textContent = 'Total Dia: 00:00';
                     standardWorkedEl.textContent = 'Jornada Padrão: 00:00';
                     overtimeTotalEl.textContent = 'Extras Dia: 00:00';
@@ -695,7 +673,6 @@
                         <td class="${overtimeClass}">${overtimePrefix}${minutesToHHMM(entry.overtimeMinutes)}</td>
                     `;
                     
-                    // *** MELHORIA DE EDIÇÃO: Adiciona o listener de clique na linha ***
                     tr.addEventListener('click', () => loadEntryForEditing(entry));
                     
                     entryLogBody.appendChild(tr);
@@ -711,23 +688,20 @@
                 }
             }
             
-            // *** MELHORIA DE EDIÇÃO: Nova função para carregar dados nos campos ***
             function loadEntryForEditing(entry) {
-                // Preenche os campos de entrada
                 entryDate.value = entry.date;
                 entryTime.value = entry.entry;
                 lunchOutTime.value = entry.lunchOut;
                 lunchInTime.value = entry.lunchIn;
                 exitTime.value = entry.exit;
                 
-                // Muda o texto do botão
+                currentEditingDate = entry.date;
+                
                 calculateBtn.textContent = 'Atualizar Lançamento';
                 
-                // Rola a tela para cima para o card de edição
                 timeEntryCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
             
-            // NOVA FUNÇÃO: Exportar relatório em PDF
             function exportToPDF() {
                 const selectedEmployee = reportEmployeeSelect.value;
                 if (!selectedEmployee) {
@@ -741,39 +715,32 @@
                     return;
                 }
                 
-                // Ordenar entradas por data (mais recente primeiro)
-                const sortedEntries = [...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
+                // *** ATUALIZADO: Organiza o PDF em ordem crescente também ***
+                const sortedEntries = [...entries].sort((a, b) => new Date(a.date) - new Date(b.date));
                 
-                // Calcular totais
                 let totalOvertime = 0;
                 sortedEntries.forEach(entry => {
                     totalOvertime += entry.overtimeMinutes;
                 });
                 
-                // Criar PDF
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
-                // Configurações do documento
                 const pageWidth = doc.internal.pageSize.getWidth();
                 const margin = 15;
                 
-                // Título
                 doc.setFontSize(18);
-                doc.setTextColor(0, 90, 156); // Azul corporativo
+                doc.setTextColor(0, 90, 156); 
                 doc.text('Relatório de Horas Extras', pageWidth / 2, 20, { align: 'center' });
                 
-                // Informações do funcionário
                 doc.setFontSize(12);
                 doc.setTextColor(0, 0, 0);
                 doc.text(`Funcionário: ${selectedEmployee}`, margin, 35);
                 doc.text(`Data de geração: ${new Date().toLocaleDateString('pt-BR')}`, margin, 45);
                 doc.text(`Total de horas extras acumuladas: ${minutesToHHMM(totalOvertime)}`, margin, 55);
                 
-                // Cabeçalho da tabela
                 const tableHeaders = [['Data', 'Entrada', 'Saída Almoço', 'Retorno', 'Saída', 'Total', 'Extras']];
                 
-                // Dados da tabela
                 const tableData = sortedEntries.map(entry => {
                     const [y, m, d] = entry.date.split('-');
                     const formattedDate = `${d}/${m}/${y}`;
@@ -790,7 +757,6 @@
                     ];
                 });
                 
-                // Adicionar tabela ao PDF
                 doc.autoTable({
                     startY: 65,
                     head: tableHeaders,
@@ -807,7 +773,6 @@
                     margin: { top: 65 }
                 });
                 
-                // Salvar PDF
                 const fileName = `relatorio_horas_${selectedEmployee.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
                 doc.save(fileName);
             }
@@ -864,7 +829,7 @@
                     db.entries[name] = []; 
                     saveData();
                     populateEmployeeSelect();
-                    populateReportEmployeeSelect(); // Atualiza também o seletor de relatórios
+                    populateReportEmployeeSelect();
                     employeeSelect.value = name; 
                     updateDisplayForSelectedEmployee();
                     employeeNameInput.value = '';
@@ -924,25 +889,31 @@
                     overtimeMinutes: overtimeMinutes 
                 };
 
-                // Esta lógica já lidava com atualização, por isso a edição funciona
-                const existingEntryIndex = db.entries[selectedName].findIndex(e => e.date === date);
+                if (currentEditingDate && currentEditingDate !== newEntry.date) {
+                    const oldEntryIndex = db.entries[selectedName].findIndex(e => e.date === currentEditingDate);
+                    if (oldEntryIndex > -1) {
+                        db.entries[selectedName].splice(oldEntryIndex, 1);
+                    }
+                }
+
+                const existingEntryIndex = db.entries[selectedName].findIndex(e => e.date === newEntry.date);
+                
                 if (existingEntryIndex > -1) {
                     db.entries[selectedName][existingEntryIndex] = newEntry;
                 } else {
                     db.entries[selectedName].push(newEntry);
                 }
-
+                
                 saveData();
                 populateEntryLog(selectedName);
 
-                // Limpa os campos após lançar/atualizar
                 entryTime.value = '';
                 lunchOutTime.value = '';
                 lunchInTime.value = '';
                 exitTime.value = '';
                 
-                // *** MELHORIA DE EDIÇÃO: Reseta o botão após a ação ***
                 calculateBtn.textContent = 'Lançar e Calcular';
+                currentEditingDate = null;
             }
 
             // === EVENT LISTENERS ===
@@ -951,11 +922,9 @@
             calculateBtn.addEventListener('click', calculateAndLog);
             pdfReportBtn.addEventListener('click', exportToPDF);
 
-            // Listeners de Configurações
             backupBtn.addEventListener('click', exportBackup);
             clearBtn.addEventListener('click', clearSystem);
             
-            // Listeners do Modal
             openSettingsBtn.addEventListener('click', () => {
                 settingsModal.style.display = 'block';
             });
@@ -965,7 +934,6 @@
             });
             
             window.addEventListener('click', (event) => {
-                // Fecha o modal se clicar fora do conteúdo
                 if (event.target == settingsModal) {
                     settingsModal.style.display = 'none';
                 }
