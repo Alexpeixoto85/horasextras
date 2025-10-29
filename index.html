@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de Horas Extras</title>
     
+    <!-- Incluindo a biblioteca jsPDF para exportação em PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
@@ -28,6 +32,9 @@
             color: var(--text-color);
             margin: 0;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
         .container {
@@ -35,6 +42,7 @@
             margin: 0 auto;
             display: grid;
             gap: 20px;
+            flex: 1;
         }
 
         header {
@@ -50,6 +58,33 @@
         header p {
             font-size: 1.1em;
             color: var(--text-light);
+        }
+
+        /* MELHORIA: Botão de Configurações posicionado no rodapé */
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        #open-settings-btn {
+            font-size: 1.5em;
+            padding: 10px 20px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        #open-settings-btn:hover {
+            background-color: #004a80;
+            transform: translateY(-2px);
         }
 
         .card {
@@ -94,7 +129,7 @@
             border: 1px solid var(--border-color);
             border-radius: 6px;
             font-size: 1em;
-            box-sizing: border-box; /* Importante para o padding não quebrar o layout */
+            box-sizing: border-box; 
         }
 
         .form-group-inline input[type="text"] {
@@ -111,14 +146,39 @@
             font-weight: 500;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            width: 100%; /* Botões ocupam 100% por padrão */
         }
 
         button:hover {
             background-color: #004a80;
         }
-
+        
+        /* Botões de Ação Específicos */
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+        }
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
+        /* Ajusta o botão "Adicionar" */
         #add-employee-btn {
-            white-space: nowrap; /* Evita que o texto "Adicionar" quebre */
+            width: auto; 
+            white-space: nowrap; 
         }
 
         /* Layout dos campos de horário */
@@ -132,16 +192,19 @@
         .results-summary {
             display: flex;
             justify-content: space-around;
+            flex-wrap: wrap; 
             background-color: var(--secondary-color);
             padding: 20px;
             border-radius: 6px;
             margin-bottom: 20px;
             text-align: center;
+            gap: 15px; 
         }
 
         .results-summary div {
             font-size: 1.1em;
             color: var(--text-light);
+            flex-basis: 200px; 
         }
 
         .results-summary .highlight {
@@ -149,11 +212,19 @@
             font-weight: 700;
             color: var(--success-color);
         }
+        
+        #total-overtime-history {
+            color: var(--primary-color);
+            border-top: 2px solid var(--border-color);
+            padding-top: 10px;
+            flex-basis: 100%; 
+            font-size: 1.4em !important;
+        }
 
         /* Tabela de Histórico */
         .table-container {
             width: 100%;
-            overflow-x: auto; /* Garante responsividade em telas menores */
+            overflow-x: auto; 
         }
 
         table {
@@ -174,14 +245,6 @@
             font-weight: 500;
         }
 
-        tbody tr:nth-child(even) {
-            background-color: #FDFDFD;
-        }
-
-        tbody tr:hover {
-            background-color: #F0F5FA;
-        }
-
         /* Classes de utilidade */
         .text-danger {
             color: var(--danger-color);
@@ -192,6 +255,78 @@
             color: var(--success-color);
             font-weight: 500;
         }
+        
+        /* --- Estilos do Modal de Configurações --- */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.5); 
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 15% auto; 
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .modal-content h2 {
+             margin-top: 0;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 10px;
+        }
+        
+        .modal-content .form-group {
+            gap: 10px;
+        }
+
+        .modal-close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .modal-close:hover,
+        .modal-close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        /* NOVO: Seletor de funcionário para impressão e PDF */
+        .report-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+        
+        .report-actions select {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .report-actions button {
+            width: auto;
+        }
+        /* --- Fim dos Estilos do Modal --- */
+
 
         /* Responsividade */
         @media (max-width: 600px) {
@@ -202,14 +337,88 @@
             .form-group-inline {
                 flex-direction: column;
             }
-
-            .results-summary {
+            
+            #employee-manager .form-group-inline {
+                flex-direction: row; 
+            }
+            
+            #employee-manager .form-group-inline button {
+                width: auto; 
+            }
+            
+            .report-actions {
                 flex-direction: column;
-                gap: 15px;
+            }
+            
+            .report-actions select,
+            .report-actions button {
+                width: 100%;
+            }
+        }
+        
+        /* --- MELHORIA: Estilos de Impressão Ajustados --- */
+        @media print {
+            /* Esconde elementos indesejados (header, inputs, modal, botão de config) */
+            header, #employee-manager, #time-entry-card, #settings-modal, footer,
+            #total-worked, #standard-worked, #overtime-total, .report-actions {
+                display: none;
+            }
+
+            /* Mostra o container e o card de resultados e ajusta para impressão */
+            .container, #results-card {
+                display: block;
+                width: 100%;
+                max-width: 100%;
+                padding: 0;
+                margin: 0;
+                box-shadow: none;
+                border: none;
+            }
+            
+            /* Garante que o sumário (para o total acumulado) e a tabela sejam visíveis */
+            .results-summary, .table-container {
+                display: block;
+            }
+            
+            /* Remove o fundo e borda do sumário na impressão */
+            .results-summary {
+                 background-color: #FFF;
+                 border: none;
+                 padding: 0 0 15px 0;
+                 justify-content: flex-start;
+            }
+            
+            /* Ajusta o Total Acumulado para impressão */
+            #total-overtime-history {
+                text-align: left;
+                padding-top: 0;
+                border-top: none;
+                flex-basis: auto; 
+                font-size: 1.3em !important; 
+            }
+            
+            /* Remove margens dos títulos */
+            #results-card h2, #results-card h3 {
+                margin-top: 0;
+                padding-bottom: 5px;
+            }
+            
+            /* Melhora a aparência da tabela na impressão */
+            table {
+                border: 1px solid #000;
+            }
+            
+            th, td {
+                border: 1px solid #000;
+                padding: 8px 10px;
+            }
+            
+            thead th {
+                background-color: #f0f0f0;
             }
         }
     </style>
-    </head>
+</head>
 <body>
 
     <div class="container">
@@ -231,7 +440,7 @@
                 </select>
             </div>
         </div>
-
+        
         <div class="card" id="time-entry-card" style="display: none;">
             <h2>Lançar Horários para <span id="selected-employee-name"></span></h2>
             <div class="form-grid">
@@ -260,11 +469,13 @@
         </div>
 
         <div class="card" id="results-card" style="display: none;">
-            <h2>Resultados do Dia</h2>
+            <h2>Resultados</h2>
             <div class="results-summary">
                 <div id="total-worked"></div>
                 <div id="standard-worked"></div>
                 <div id="overtime-total" class="highlight"></div>
+                
+                <div id="total-overtime-history" class="highlight"></div>
             </div>
             <h3>Histórico de <span id="log-employee-name"></span></h3>
             <div class="table-container">
@@ -284,16 +495,44 @@
                         </tbody>
                 </table>
             </div>
+            
+            <!-- MELHORIA: Seletor de funcionário para impressão e PDF -->
+            <div class="report-actions">
+                <label for="report-employee-select">Relatório de:</label>
+                <select id="report-employee-select">
+                    <option value="">-- Selecione um funcionário --</option>
+                </select>
+                <button id="pdf-report-btn" class="btn-success">📊 Exportar PDF</button>
+            </div>
         </div>
     </div>
+    
+    <!-- MELHORIA: Botão de configurações no rodapé -->
+    <footer>
+        <button id="open-settings-btn">⚙️ Configurações</button>
+    </footer>
+    
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" id="modal-close-btn">&times;</span>
+            <h2>Configurações</h2>
+            <div class="form-group">
+                <button id="backup-btn" class="btn-secondary">Exportar Backup (.json)</button>
+            </div>
+            <div class="form-group">
+                <button id="clear-btn" class="btn-danger">Limpar Sistema</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
             // === CONSTANTES DE HORÁRIO PADRÃO (em minutos) ===
-            const STANDARD_START_MIN = 9 * 60; // 09:00
-            const STANDARD_LUNCH_OUT_MIN = 12 * 60; // 12:00
-            const STANDARD_LUNCH_IN_MIN = 13 * 60; // 13:00
-            const STANDARD_END_MIN = 18 * 60; // 18:00
+            const STANDARD_START_MIN = 9 * 60; 
+            const STANDARD_LUNCH_OUT_MIN = 12 * 60;
+            const STANDARD_LUNCH_IN_MIN = 13 * 60;
+            const STANDARD_END_MIN = 18 * 60;
             const STANDARD_WORK_MIN = (STANDARD_LUNCH_OUT_MIN - STANDARD_START_MIN) + (STANDARD_END_MIN - STANDARD_LUNCH_IN_MIN); // 480 min = 8 horas
 
             // === REFERÊNCIAS DO DOM ===
@@ -317,45 +556,58 @@
             const standardWorkedEl = document.getElementById('standard-worked');
             const overtimeTotalEl = document.getElementById('overtime-total');
             const entryLogBody = document.querySelector('#entry-log tbody');
+            
+            const totalOvertimeHistoryEl = document.getElementById('total-overtime-history');
+            const pdfReportBtn = document.getElementById('pdf-report-btn');
+            const reportEmployeeSelect = document.getElementById('report-employee-select');
+            
+            // Referências de Configurações (dentro do modal)
+            const backupBtn = document.getElementById('backup-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            
+            // Referências do Modal
+            const settingsModal = document.getElementById('settings-modal');
+            const openSettingsBtn = document.getElementById('open-settings-btn');
+            const closeModalBtn = document.getElementById('modal-close-btn');
 
             // === BANCO DE DADOS LOCAL ===
             let db = {
                 employees: [],
-                entries: {} // Ex: { "Nome do Func": [ {date, ...}, ... ] }
+                entries: {} 
             };
 
             // === FUNÇÕES AUXILIARES ===
 
-            /** Converte "HH:mm" para minutos desde a meia-noite */
             function timeToMinutes(timeStr) {
                 if (!timeStr) return 0;
                 const [hours, minutes] = timeStr.split(':').map(Number);
                 return hours * 60 + minutes;
             }
 
-            /** Converte minutos para "HH:mm" */
             function minutesToHHMM(totalMinutes) {
                 if (isNaN(totalMinutes)) return "00:00";
-                const hours = Math.floor(totalMinutes / 60);
-                const minutes = Math.round(totalMinutes % 60); // Arredonda para evitar segundos
-                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                
+                const sign = totalMinutes < 0 ? '-' : '';
+                const absMinutes = Math.abs(totalMinutes);
+                
+                const hours = Math.floor(absMinutes / 60);
+                const minutes = Math.round(absMinutes % 60); 
+                return `${sign}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
             }
 
-            /** Salva o banco de dados no localStorage */
             function saveData() {
                 localStorage.setItem('overtimeDB', JSON.stringify(db));
             }
 
-            /** Carrega o banco de dados do localStorage */
             function loadData() {
                 const localDB = localStorage.getItem('overtimeDB');
                 if (localDB) {
                     db = JSON.parse(localDB);
                 }
                 populateEmployeeSelect();
+                populateReportEmployeeSelect();
             }
 
-            /** Popula o <select> com os funcionários cadastrados */
             function populateEmployeeSelect() {
                 employeeSelect.innerHTML = '<option value="">-- Selecione --</option>';
                 db.employees.forEach(name => {
@@ -365,8 +617,18 @@
                     employeeSelect.appendChild(option);
                 });
             }
+            
+            // NOVA FUNÇÃO: Preenche o seletor de funcionários para relatórios
+            function populateReportEmployeeSelect() {
+                reportEmployeeSelect.innerHTML = '<option value="">-- Selecione um funcionário --</option>';
+                db.employees.forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    reportEmployeeSelect.appendChild(option);
+                });
+            }
 
-            /** Atualiza a exibição (cartões e tabela) com base no funcionário selecionado */
             function updateDisplayForSelectedEmployee() {
                 const selectedName = employeeSelect.value;
                 if (selectedName) {
@@ -381,27 +643,34 @@
                 }
             }
 
-            /** Popula a tabela de histórico para um funcionário */
             function populateEntryLog(employeeName) {
-                entryLogBody.innerHTML = ''; // Limpa a tabela
+                entryLogBody.innerHTML = ''; 
                 const entries = db.entries[employeeName] || [];
+                
+                let totalOvertimeAllEntries = 0;
 
-                // Ordena por data, da mais recente para a mais antiga
                 entries.sort((a, b) => new Date(b.date) - new Date(a.date));
 
                 if (entries.length === 0) {
                     entryLogBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nenhum lançamento encontrado.</td></tr>';
+                    totalOvertimeHistoryEl.textContent = 'Total Acumulado: 00:00';
+                    totalOvertimeHistoryEl.className = 'highlight';
+                    // Limpa os totais do dia se não houver lançamentos
+                    totalWorkedEl.textContent = 'Total Dia: 00:00';
+                    standardWorkedEl.textContent = 'Jornada Padrão: 00:00';
+                    overtimeTotalEl.textContent = 'Extras Dia: 00:00';
                     return;
                 }
 
                 entries.forEach(entry => {
+                    totalOvertimeAllEntries += entry.overtimeMinutes;
+                    
                     const tr = document.createElement('tr');
                     
-                    // Formata a data para dd/mm/aaaa
                     const [y, m, d] = entry.date.split('-');
                     const formattedDate = `${d}/${m}/${y}`;
 
-                    const overtimeClass = entry.overtimeMinutes > 0 ? 'text-success' : '';
+                    const overtimeClass = entry.overtimeMinutes > 0 ? 'text-success' : (entry.overtimeMinutes < 0 ? 'text-danger' : '');
                     const overtimePrefix = entry.overtimeMinutes > 0 ? '+' : '';
 
                     tr.innerHTML = `
@@ -415,19 +684,156 @@
                     `;
                     entryLogBody.appendChild(tr);
                 });
+                
+                totalOvertimeHistoryEl.textContent = `Total Acumulado: ${minutesToHHMM(totalOvertimeAllEntries)}`;
+                if (totalOvertimeAllEntries > 0) {
+                    totalOvertimeHistoryEl.className = 'highlight text-success';
+                } else if (totalOvertimeAllEntries < 0) {
+                    totalOvertimeHistoryEl.className = 'highlight text-danger';
+                } else {
+                    totalOvertimeHistoryEl.className = 'highlight';
+                }
+            }
+            
+            // NOVA FUNÇÃO: Exportar relatório em PDF
+            function exportToPDF() {
+                const selectedEmployee = reportEmployeeSelect.value;
+                if (!selectedEmployee) {
+                    alert('Por favor, selecione um funcionário para exportar o relatório em PDF.');
+                    return;
+                }
+                
+                const entries = db.entries[selectedEmployee] || [];
+                if (entries.length === 0) {
+                    alert('Não há dados para exportar para este funcionário.');
+                    return;
+                }
+                
+                // Ordenar entradas por data (mais recente primeiro)
+                const sortedEntries = [...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                // Calcular totais
+                let totalOvertime = 0;
+                sortedEntries.forEach(entry => {
+                    totalOvertime += entry.overtimeMinutes;
+                });
+                
+                // Criar PDF
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Configurações do documento
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const margin = 15;
+                
+                // Título
+                doc.setFontSize(18);
+                doc.setTextColor(0, 90, 156); // Azul corporativo
+                doc.text('Relatório de Horas Extras', pageWidth / 2, 20, { align: 'center' });
+                
+                // Informações do funcionário
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                doc.text(`Funcionário: ${selectedEmployee}`, margin, 35);
+                doc.text(`Data de geração: ${new Date().toLocaleDateString('pt-BR')}`, margin, 45);
+                doc.text(`Total de horas extras acumuladas: ${minutesToHHMM(totalOvertime)}`, margin, 55);
+                
+                // Cabeçalho da tabela
+                const tableHeaders = [['Data', 'Entrada', 'Saída Almoço', 'Retorno', 'Saída', 'Total', 'Extras']];
+                
+                // Dados da tabela
+                const tableData = sortedEntries.map(entry => {
+                    const [y, m, d] = entry.date.split('-');
+                    const formattedDate = `${d}/${m}/${y}`;
+                    const overtimePrefix = entry.overtimeMinutes > 0 ? '+' : '';
+                    
+                    return [
+                        formattedDate,
+                        entry.entry,
+                        entry.lunchOut,
+                        entry.lunchIn,
+                        entry.exit,
+                        minutesToHHMM(entry.totalWorkedMinutes),
+                        `${overtimePrefix}${minutesToHHMM(entry.overtimeMinutes)}`
+                    ];
+                });
+                
+                // Adicionar tabela ao PDF
+                doc.autoTable({
+                    startY: 65,
+                    head: tableHeaders,
+                    body: tableData,
+                    theme: 'grid',
+                    headStyles: {
+                        fillColor: [0, 90, 156],
+                        textColor: 255,
+                        fontStyle: 'bold'
+                    },
+                    alternateRowStyles: {
+                        fillColor: [235, 242, 250]
+                    },
+                    margin: { top: 65 }
+                });
+                
+                // Salvar PDF
+                const fileName = `relatorio_horas_${selectedEmployee.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+                doc.save(fileName);
+            }
+            
+            // --- Funções de Backup e Limpeza ---
+
+            function exportBackup() {
+                const dataStr = localStorage.getItem('overtimeDB');
+                if (!dataStr || dataStr === '{}' || !db.employees || db.employees.length === 0) {
+                    alert('Não há dados para exportar.');
+                    return;
+                }
+                
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                
+                const date = new Date().toISOString().split('T')[0];
+                a.href = url;
+                a.download = `backup_horaspro_${date}.json`;
+                
+                document.body.appendChild(a);
+                a.click();
+                
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            function clearSystem() {
+                const confirmation1 = confirm('ATENÇÃO: Você está prestes a apagar TODOS os dados (funcionários e lançamentos).\n\nEsta ação não pode ser desfeita.\n\nDeseja continuar?');
+                
+                if (!confirmation1) {
+                    alert('Limpeza cancelada.');
+                    return;
+                }
+
+                const confirmation2 = prompt('Para confirmar a exclusão de TUDO, digite a palavra "APAGAR" em maiúsculas:');
+
+                if (confirmation2 === 'APAGAR') {
+                    localStorage.removeItem('overtimeDB');
+                    alert('Sistema limpo com sucesso. A página será recarregada.');
+                    location.reload(); 
+                } else {
+                    alert('Confirmação inválida. A limpeza foi cancelada.');
+                }
             }
 
             // === LÓGICA PRINCIPAL ===
 
-            /** Adiciona um novo funcionário */
             function addEmployee() {
                 const name = employeeNameInput.value.trim();
                 if (name && !db.employees.includes(name)) {
                     db.employees.push(name);
-                    db.entries[name] = []; // Inicializa o array de lançamentos
+                    db.entries[name] = []; 
                     saveData();
                     populateEmployeeSelect();
-                    employeeSelect.value = name; // Seleciona o funcionário recém-criado
+                    populateReportEmployeeSelect(); // Atualiza também o seletor de relatórios
+                    employeeSelect.value = name; 
                     updateDisplayForSelectedEmployee();
                     employeeNameInput.value = '';
                 } else if (db.employees.includes(name)) {
@@ -435,7 +841,6 @@
                 }
             }
 
-            /** Calcula e lança as horas */
             function calculateAndLog() {
                 const selectedName = employeeSelect.value;
                 if (!selectedName) {
@@ -443,7 +848,6 @@
                     return;
                 }
 
-                // 1. Obter valores
                 const date = entryDate.value;
                 const entry = entryTime.value;
                 const lunchOut = lunchOutTime.value;
@@ -455,52 +859,29 @@
                     return;
                 }
 
-                // 2. Converter para minutos
                 const entryMin = timeToMinutes(entry);
                 const lunchOutMin = timeToMinutes(lunchOut);
                 const lunchInMin = timeToMinutes(lunchIn);
                 const exitMin = timeToMinutes(exit);
 
-                // 3. Calcular Horas Trabalhadas
                 const morningWorkMin = Math.max(0, lunchOutMin - entryMin);
                 const afternoonWorkMin = Math.max(0, exitMin - lunchInMin);
                 const totalWorkedMinutes = morningWorkMin + afternoonWorkMin;
 
-                // 4. Calcular Horas Extras (conforme solicitado)
-                let overtimeMinutes = 0;
+                const overtimeMinutes = totalWorkedMinutes - STANDARD_WORK_MIN;
 
-                // 4.1. Extra por entrar antes do padrão (09:00)
-                if (entryMin < STANDARD_START_MIN) {
-                    overtimeMinutes += (STANDARD_START_MIN - entryMin);
-                }
-
-                // 4.2. Extra por trabalhar no horário de almoço (entre 12:00 e 13:00)
-                // Se saiu depois das 12:00
-                if (lunchOutMin > STANDARD_LUNCH_OUT_MIN) {
-                    overtimeMinutes += Math.min(lunchOutMin, STANDARD_LUNCH_IN_MIN) - STANDARD_LUNCH_OUT_MIN;
-                }
-                // Se voltou antes das 13:00
-                if (lunchInMin < STANDARD_LUNCH_IN_MIN) {
-                    overtimeMinutes += STANDARD_LUNCH_IN_MIN - Math.max(lunchInMin, STANDARD_LUNCH_OUT_MIN);
-                }
-
-                // 4.3. Extra por sair depois do padrão (18:00)
-                if (exitMin > STANDARD_END_MIN) {
-                    overtimeMinutes += (exitMin - STANDARD_END_MIN);
-                }
-
-                // 5. Exibir resultados imediatos
-                totalWorkedEl.textContent = `Total Trabalhado: ${minutesToHHMM(totalWorkedMinutes)}`;
+                totalWorkedEl.textContent = `Total Dia: ${minutesToHHMM(totalWorkedMinutes)}`;
                 standardWorkedEl.textContent = `Jornada Padrão: ${minutesToHHMM(STANDARD_WORK_MIN)}`;
-                overtimeTotalEl.textContent = `Horas Extras: ${minutesToHHMM(overtimeMinutes)}`;
+                overtimeTotalEl.textContent = `Extras Dia: ${minutesToHHMM(overtimeMinutes)}`;
                 
                 if (overtimeMinutes > 0) {
                     overtimeTotalEl.className = 'highlight text-success';
+                } else if (overtimeMinutes < 0) {
+                     overtimeTotalEl.className = 'highlight text-danger';
                 } else {
                     overtimeTotalEl.className = 'highlight';
                 }
 
-                // 6. Salvar o lançamento
                 const newEntry = {
                     date: date,
                     entry: entry,
@@ -508,25 +889,19 @@
                     lunchIn: lunchIn,
                     exit: exit,
                     totalWorkedMinutes: totalWorkedMinutes,
-                    overtimeMinutes: overtimeMinutes
+                    overtimeMinutes: overtimeMinutes 
                 };
 
-                // Evita duplicidade de lançamento para o mesmo dia
                 const existingEntryIndex = db.entries[selectedName].findIndex(e => e.date === date);
                 if (existingEntryIndex > -1) {
-                    // Atualiza o lançamento existente
                     db.entries[selectedName][existingEntryIndex] = newEntry;
                 } else {
-                    // Adiciona novo lançamento
                     db.entries[selectedName].push(newEntry);
                 }
 
                 saveData();
-
-                // 7. Atualizar o histórico
                 populateEntryLog(selectedName);
 
-                // 8. Limpar campos (exceto data)
                 entryTime.value = '';
                 lunchOutTime.value = '';
                 lunchInTime.value = '';
@@ -537,11 +912,32 @@
             addEmployeeBtn.addEventListener('click', addEmployee);
             employeeSelect.addEventListener('change', updateDisplayForSelectedEmployee);
             calculateBtn.addEventListener('click', calculateAndLog);
+            pdfReportBtn.addEventListener('click', exportToPDF);
+
+            // Listeners de Configurações
+            backupBtn.addEventListener('click', exportBackup);
+            clearBtn.addEventListener('click', clearSystem);
+            
+            // Listeners do Modal
+            openSettingsBtn.addEventListener('click', () => {
+                settingsModal.style.display = 'block';
+            });
+            
+            closeModalBtn.addEventListener('click', () => {
+                settingsModal.style.display = 'none';
+            });
+            
+            window.addEventListener('click', (event) => {
+                // Fecha o modal se clicar fora do conteúdo
+                if (event.target == settingsModal) {
+                    settingsModal.style.display = 'none';
+                }
+            });
 
             // === INICIALIZAÇÃO ===
             loadData();
-            // Define a data de hoje como padrão
             entryDate.valueAsDate = new Date();
         });
     </script>
-    </body>
+</body>
+</html>
