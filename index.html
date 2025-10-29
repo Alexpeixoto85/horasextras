@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de Horas Extras</title>
     
-    <!-- Incluindo a biblioteca jsPDF para exportação em PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     
@@ -244,6 +243,18 @@
             color: var(--primary-color);
             font-weight: 500;
         }
+        
+        /* --- MELHORIA DE EDIÇÃO: Linhas clicáveis --- */
+        #entry-log tbody tr {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        #entry-log tbody tr:hover {
+            background-color: var(--secondary-color);
+        }
+        /* --- Fim da Melhoria --- */
+
 
         /* Classes de utilidade */
         .text-danger {
@@ -477,7 +488,7 @@
                 
                 <div id="total-overtime-history" class="highlight"></div>
             </div>
-            <h3>Histórico de <span id="log-employee-name"></span></h3>
+            <h3>Histórico de <span id="log-employee-name"></span> (Clique na linha para editar)</h3>
             <div class="table-container">
                 <table id="entry-log">
                     <thead>
@@ -496,7 +507,6 @@
                 </table>
             </div>
             
-            <!-- MELHORIA: Seletor de funcionário para impressão e PDF -->
             <div class="report-actions">
                 <label for="report-employee-select">Relatório de:</label>
                 <select id="report-employee-select">
@@ -507,7 +517,6 @@
         </div>
     </div>
     
-    <!-- MELHORIA: Botão de configurações no rodapé -->
     <footer>
         <button id="open-settings-btn">⚙️ Configurações</button>
     </footer>
@@ -637,6 +646,9 @@
                     timeEntryCard.style.display = 'block';
                     resultsCard.style.display = 'block';
                     populateEntryLog(selectedName);
+                    
+                    // *** MELHORIA DE EDIÇÃO: Reseta o botão ao trocar de funcionário ***
+                    calculateBtn.textContent = 'Lançar e Calcular';
                 } else {
                     timeEntryCard.style.display = 'none';
                     resultsCard.style.display = 'none';
@@ -682,6 +694,10 @@
                         <td>${minutesToHHMM(entry.totalWorkedMinutes)}</td>
                         <td class="${overtimeClass}">${overtimePrefix}${minutesToHHMM(entry.overtimeMinutes)}</td>
                     `;
+                    
+                    // *** MELHORIA DE EDIÇÃO: Adiciona o listener de clique na linha ***
+                    tr.addEventListener('click', () => loadEntryForEditing(entry));
+                    
                     entryLogBody.appendChild(tr);
                 });
                 
@@ -693,6 +709,22 @@
                 } else {
                     totalOvertimeHistoryEl.className = 'highlight';
                 }
+            }
+            
+            // *** MELHORIA DE EDIÇÃO: Nova função para carregar dados nos campos ***
+            function loadEntryForEditing(entry) {
+                // Preenche os campos de entrada
+                entryDate.value = entry.date;
+                entryTime.value = entry.entry;
+                lunchOutTime.value = entry.lunchOut;
+                lunchInTime.value = entry.lunchIn;
+                exitTime.value = entry.exit;
+                
+                // Muda o texto do botão
+                calculateBtn.textContent = 'Atualizar Lançamento';
+                
+                // Rola a tela para cima para o card de edição
+                timeEntryCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
             
             // NOVA FUNÇÃO: Exportar relatório em PDF
@@ -892,6 +924,7 @@
                     overtimeMinutes: overtimeMinutes 
                 };
 
+                // Esta lógica já lidava com atualização, por isso a edição funciona
                 const existingEntryIndex = db.entries[selectedName].findIndex(e => e.date === date);
                 if (existingEntryIndex > -1) {
                     db.entries[selectedName][existingEntryIndex] = newEntry;
@@ -902,10 +935,14 @@
                 saveData();
                 populateEntryLog(selectedName);
 
+                // Limpa os campos após lançar/atualizar
                 entryTime.value = '';
                 lunchOutTime.value = '';
                 lunchInTime.value = '';
                 exitTime.value = '';
+                
+                // *** MELHORIA DE EDIÇÃO: Reseta o botão após a ação ***
+                calculateBtn.textContent = 'Lançar e Calcular';
             }
 
             // === EVENT LISTENERS ===
