@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Horas Extras</title>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+        :root {
+            --primary-color: #005A9C; /* Azul corporativo */
+            --secondary-color: #EBF2FA;
+            --text-color: #333;
+            --text-light: #555;
+            --border-color: #DDD;
+            --bg-color: #F4F7F6;
+            --card-bg: #FFFFFF;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: grid;
+            gap: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        header h1 {
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        header p {
+            font-size: 1.1em;
+            color: var(--text-light);
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--text-light);
+        }
+
+        .form-group-inline {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"],
+        input[type="time"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1em;
+            box-sizing: border-box; /* Importante para o padding não quebrar o layout */
+        }
+
+        .form-group-inline input[type="text"] {
+            flex-grow: 1;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #004a80;
+        }
+
+        #add-employee-btn {
+            white-space: nowrap; /* Evita que o texto "Adicionar" quebre */
+        }
+
+        /* Layout dos campos de horário */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px 20px;
+        }
+
+        /* Seção de Resultados */
+        .results-summary {
+            display: flex;
+            justify-content: space-around;
+            background-color: var(--secondary-color);
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .results-summary div {
+            font-size: 1.1em;
+            color: var(--text-light);
+        }
+
+        .results-summary .highlight {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--success-color);
+        }
+
+        /* Tabela de Histórico */
+        .table-container {
+            width: 100%;
+            overflow-x: auto; /* Garante responsividade em telas menores */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        thead th {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #FDFDFD;
+        }
+
+        tbody tr:hover {
+            background-color: #F0F5FA;
+        }
+
+        /* Classes de utilidade */
+        .text-danger {
+            color: var(--danger-color);
+            font-weight: 500;
+        }
+
+        .text-success {
+            color: var(--success-color);
+            font-weight: 500;
+        }
+
+        /* Responsividade */
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group-inline {
+                flex-direction: column;
+            }
+
+            .results-summary {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+    </head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Gestor de Horas Extras</h1>
+            <p>Cadastre funcionários e lance os horários para calcular.</p>
+        </header>
+
+        <div class="card" id="employee-manager">
+            <h2>Funcionários</h2>
+            <div class="form-group-inline">
+                <input type="text" id="employee-name-input" placeholder="Nome do funcionário">
+                <button id="add-employee-btn">Adicionar</button>
+            </div>
+            <div class="form-group">
+                <label for="employee-select">Selecionar Funcionário:</label>
+                <select id="employee-select">
+                    <option value="">-- Selecione --</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="card" id="time-entry-card" style="display: none;">
+            <h2>Lançar Horários para <span id="selected-employee-name"></span></h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="entry-date">Data:</label>
+                    <input type="date" id="entry-date">
+                </div>
+                <div class="form-group">
+                    <label for="entry-time">Entrada (Padrão 09:00):</label>
+                    <input type="time" id="entry-time">
+                </div>
+                <div class="form-group">
+                    <label for="lunch-out-time">Saída Almoço (Padrão 12:00):</label>
+                    <input type="time" id="lunch-out-time">
+                </div>
+                <div class="form-group">
+                    <label for="lunch-in-time">Retorno Almoço (Padrão 13:00):</label>
+                    <input type="time" id="lunch-in-time">
+                </div>
+                <div class="form-group">
+                    <label for="exit-time">Saída (Padrão 18:00):</label>
+                    <input type="time" id="exit-time">
+                </div>
+            </div>
+            <button id="calculate-btn">Lançar e Calcular</button>
+        </div>
+
+        <div class="card" id="results-card" style="display: none;">
+            <h2>Resultados do Dia</h2>
+            <div class="results-summary">
+                <div id="total-worked"></div>
+                <div id="standard-worked"></div>
+                <div id="overtime-total" class="highlight"></div>
+            </div>
+            <h3>Histórico de <span id="log-employee-name"></span></h3>
+            <div class="table-container">
+                <table id="entry-log">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Entrada</th>
+                            <th>Saída Almoço</th>
+                            <th>Retorno Almoço</th>
+                            <th>Saída</th>
+                            <th>Total Horas</th>
+                            <th>Horas Extras</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // === CONSTANTES DE HORÁRIO PADRÃO (em minutos) ===
+            const STANDARD_START_MIN = 9 * 60; // 09:00
+            const STANDARD_LUNCH_OUT_MIN = 12 * 60; // 12:00
+            const STANDARD_LUNCH_IN_MIN = 13 * 60; // 13:00
+            const STANDARD_END_MIN = 18 * 60; // 18:00
+            const STANDARD_WORK_MIN = (STANDARD_LUNCH_OUT_MIN - STANDARD_START_MIN) + (STANDARD_END_MIN - STANDARD_LUNCH_IN_MIN); // 480 min = 8 horas
+
+            // === REFERÊNCIAS DO DOM ===
+            const employeeNameInput = document.getElementById('employee-name-input');
+            const addEmployeeBtn = document.getElementById('add-employee-btn');
+            const employeeSelect = document.getElementById('employee-select');
+            
+            const timeEntryCard = document.getElementById('time-entry-card');
+            const selectedEmployeeName = document.getElementById('selected-employee-name');
+            
+            const entryDate = document.getElementById('entry-date');
+            const entryTime = document.getElementById('entry-time');
+            const lunchOutTime = document.getElementById('lunch-out-time');
+            const lunchInTime = document.getElementById('lunch-in-time');
+            const exitTime = document.getElementById('exit-time');
+            const calculateBtn = document.getElementById('calculate-btn');
+            
+            const resultsCard = document.getElementById('results-card');
+            const logEmployeeName = document.getElementById('log-employee-name');
+            const totalWorkedEl = document.getElementById('total-worked');
+            const standardWorkedEl = document.getElementById('standard-worked');
+            const overtimeTotalEl = document.getElementById('overtime-total');
+            const entryLogBody = document.querySelector('#entry-log tbody');
+
+            // === BANCO DE DADOS LOCAL ===
+            let db = {
+                employees: [],
+                entries: {} // Ex: { "Nome do Func": [ {date, ...}, ... ] }
+            };
+
+            // === FUNÇÕES AUXILIARES ===
+
+            /** Converte "HH:mm" para minutos desde a meia-noite */
+            function timeToMinutes(timeStr) {
+                if (!timeStr) return 0;
+                const [hours, minutes] = timeStr.split(':').map(Number);
+                return hours * 60 + minutes;
+            }
+
+            /** Converte minutos para "HH:mm" */
+            function minutesToHHMM(totalMinutes) {
+                if (isNaN(totalMinutes)) return "00:00";
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = Math.round(totalMinutes % 60); // Arredonda para evitar segundos
+                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+            }
+
+            /** Salva o banco de dados no localStorage */
+            function saveData() {
+                localStorage.setItem('overtimeDB', JSON.stringify(db));
+            }
+
+            /** Carrega o banco de dados do localStorage */
+            function loadData() {
+                const localDB = localStorage.getItem('overtimeDB');
+                if (localDB) {
+                    db = JSON.parse(localDB);
+                }
+                populateEmployeeSelect();
+            }
+
+            /** Popula o <select> com os funcionários cadastrados */
+            function populateEmployeeSelect() {
+                employeeSelect.innerHTML = '<option value="">-- Selecione --</option>';
+                db.employees.forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    employeeSelect.appendChild(option);
+                });
+            }
+
+            /** Atualiza a exibição (cartões e tabela) com base no funcionário selecionado */
+            function updateDisplayForSelectedEmployee() {
+                const selectedName = employeeSelect.value;
+                if (selectedName) {
+                    selectedEmployeeName.textContent = selectedName;
+                    logEmployeeName.textContent = selectedName;
+                    timeEntryCard.style.display = 'block';
+                    resultsCard.style.display = 'block';
+                    populateEntryLog(selectedName);
+                } else {
+                    timeEntryCard.style.display = 'none';
+                    resultsCard.style.display = 'none';
+                }
+            }
+
+            /** Popula a tabela de histórico para um funcionário */
+            function populateEntryLog(employeeName) {
+                entryLogBody.innerHTML = ''; // Limpa a tabela
+                const entries = db.entries[employeeName] || [];
+
+                // Ordena por data, da mais recente para a mais antiga
+                entries.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                if (entries.length === 0) {
+                    entryLogBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nenhum lançamento encontrado.</td></tr>';
+                    return;
+                }
+
+                entries.forEach(entry => {
+                    const tr = document.createElement('tr');
+                    
+                    // Formata a data para dd/mm/aaaa
+                    const [y, m, d] = entry.date.split('-');
+                    const formattedDate = `${d}/${m}/${y}`;
+
+                    const overtimeClass = entry.overtimeMinutes > 0 ? 'text-success' : '';
+                    const overtimePrefix = entry.overtimeMinutes > 0 ? '+' : '';
+
+                    tr.innerHTML = `
+                        <td>${formattedDate}</td>
+                        <td>${entry.entry}</td>
+                        <td>${entry.lunchOut}</td>
+                        <td>${entry.lunchIn}</td>
+                        <td>${entry.exit}</td>
+                        <td>${minutesToHHMM(entry.totalWorkedMinutes)}</td>
+                        <td class="${overtimeClass}">${overtimePrefix}${minutesToHHMM(entry.overtimeMinutes)}</td>
+                    `;
+                    entryLogBody.appendChild(tr);
+                });
+            }
+
+            // === LÓGICA PRINCIPAL ===
+
+            /** Adiciona um novo funcionário */
+            function addEmployee() {
+                const name = employeeNameInput.value.trim();
+                if (name && !db.employees.includes(name)) {
+                    db.employees.push(name);
+                    db.entries[name] = []; // Inicializa o array de lançamentos
+                    saveData();
+                    populateEmployeeSelect();
+                    employeeSelect.value = name; // Seleciona o funcionário recém-criado
+                    updateDisplayForSelectedEmployee();
+                    employeeNameInput.value = '';
+                } else if (db.employees.includes(name)) {
+                    alert('Este funcionário já está cadastrado.');
+                }
+            }
+
+            /** Calcula e lança as horas */
+            function calculateAndLog() {
+                const selectedName = employeeSelect.value;
+                if (!selectedName) {
+                    alert('Por favor, selecione um funcionário.');
+                    return;
+                }
+
+                // 1. Obter valores
+                const date = entryDate.value;
+                const entry = entryTime.value;
+                const lunchOut = lunchOutTime.value;
+                const lunchIn = lunchInTime.value;
+                const exit = exitTime.value;
+
+                if (!date || !entry || !lunchOut || !lunchIn || !exit) {
+                    alert('Por favor, preencha todos os campos de horário.');
+                    return;
+                }
+
+                // 2. Converter para minutos
+                const entryMin = timeToMinutes(entry);
+                const lunchOutMin = timeToMinutes(lunchOut);
+                const lunchInMin = timeToMinutes(lunchIn);
+                const exitMin = timeToMinutes(exit);
+
+                // 3. Calcular Horas Trabalhadas
+                const morningWorkMin = Math.max(0, lunchOutMin - entryMin);
+                const afternoonWorkMin = Math.max(0, exitMin - lunchInMin);
+                const totalWorkedMinutes = morningWorkMin + afternoonWorkMin;
+
+                // 4. Calcular Horas Extras (conforme solicitado)
+                let overtimeMinutes = 0;
+
+                // 4.1. Extra por entrar antes do padrão (09:00)
+                if (entryMin < STANDARD_START_MIN) {
+                    overtimeMinutes += (STANDARD_START_MIN - entryMin);
+                }
+
+                // 4.2. Extra por trabalhar no horário de almoço (entre 12:00 e 13:00)
+                // Se saiu depois das 12:00
+                if (lunchOutMin > STANDARD_LUNCH_OUT_MIN) {
+                    overtimeMinutes += Math.min(lunchOutMin, STANDARD_LUNCH_IN_MIN) - STANDARD_LUNCH_OUT_MIN;
+                }
+                // Se voltou antes das 13:00
+                if (lunchInMin < STANDARD_LUNCH_IN_MIN) {
+                    overtimeMinutes += STANDARD_LUNCH_IN_MIN - Math.max(lunchInMin, STANDARD_LUNCH_OUT_MIN);
+                }
+
+                // 4.3. Extra por sair depois do padrão (18:00)
+                if (exitMin > STANDARD_END_MIN) {
+                    overtimeMinutes += (exitMin - STANDARD_END_MIN);
+                }
+
+                // 5. Exibir resultados imediatos
+                totalWorkedEl.textContent = `Total Trabalhado: ${minutesToHHMM(totalWorkedMinutes)}`;
+                standardWorkedEl.textContent = `Jornada Padrão: ${minutesToHHMM(STANDARD_WORK_MIN)}`;
+                overtimeTotalEl.textContent = `Horas Extras: ${minutesToHHMM(overtimeMinutes)}`;
+                
+                if (overtimeMinutes > 0) {
+                    overtimeTotalEl.className = 'highlight text-success';
+                } else {
+                    overtimeTotalEl.className = 'highlight';
+                }
+
+                // 6. Salvar o lançamento
+                const newEntry = {
+                    date: date,
+                    entry: entry,
+                    lunchOut: lunchOut,
+                    lunchIn: lunchIn,
+                    exit: exit,
+                    totalWorkedMinutes: totalWorkedMinutes,
+                    overtimeMinutes: overtimeMinutes
+                };
+
+                // Evita duplicidade de lançamento para o mesmo dia
+                const existingEntryIndex = db.entries[selectedName].findIndex(e => e.date === date);
+                if (existingEntryIndex > -1) {
+                    // Atualiza o lançamento existente
+                    db.entries[selectedName][existingEntryIndex] = newEntry;
+                } else {
+                    // Adiciona novo lançamento
+                    db.entries[selectedName].push(newEntry);
+                }
+
+                saveData();
+
+                // 7. Atualizar o histórico
+                populateEntryLog(selectedName);
+
+                // 8. Limpar campos (exceto data)
+                entryTime.value = '';
+                lunchOutTime.value = '';
+                lunchInTime.value = '';
+                exitTime.value = '';
+            }
+
+            // === EVENT LISTENERS ===
+            addEmployeeBtn.addEventListener('click', addEmployee);
+            employeeSelect.addEventListener('change', updateDisplayForSelectedEmployee);
+            calculateBtn.addEventListener('click', calculateAndLog);
+
+            // === INICIALIZAÇÃO ===
+            loadData();
+            // Define a data de hoje como padrão
+            entryDate.valueAsDate = new Date();
+        });
+    </script>
+    </body>
