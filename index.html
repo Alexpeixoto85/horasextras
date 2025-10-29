@@ -25,10 +25,6 @@
             --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
-        * {
-            box-sizing: border-box;
-        }
-
         body {
             font-family: 'Roboto', sans-serif;
             background-color: var(--bg-color);
@@ -38,8 +34,6 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            font-size: 16px;
-            line-height: 1.5;
         }
 
         .container {
@@ -48,7 +42,6 @@
             display: grid;
             gap: 20px;
             flex: 1;
-            width: 100%;
         }
 
         header {
@@ -59,13 +52,11 @@
         header h1 {
             color: var(--primary-color);
             margin: 0;
-            font-size: clamp(1.5rem, 4vw, 2.2rem);
         }
 
         header p {
-            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            font-size: 1.1em;
             color: var(--text-light);
-            margin: 10px 0;
         }
 
         footer {
@@ -97,10 +88,9 @@
         .card {
             background-color: var(--card-bg);
             border-radius: 8px;
-            padding: 20px;
+            padding: 25px;
             box-shadow: var(--shadow);
             border: 1px solid var(--border-color);
-            width: 100%;
         }
 
         .card h2 {
@@ -108,28 +98,24 @@
             color: var(--primary-color);
             border-bottom: 2px solid var(--secondary-color);
             padding-bottom: 10px;
-            font-size: clamp(1.2rem, 3vw, 1.5rem);
         }
 
         .form-group {
             display: flex;
             flex-direction: column;
             margin-bottom: 15px;
-            width: 100%;
         }
 
         .form-group label {
             margin-bottom: 5px;
             font-weight: 500;
             color: var(--text-light);
-            font-size: 0.95rem;
         }
 
         .form-group-inline {
             display: flex;
             gap: 10px;
             margin-bottom: 15px;
-            width: 100%;
         }
 
         input[type="text"],
@@ -141,7 +127,7 @@
             border: 1px solid var(--border-color);
             border-radius: 6px;
             font-size: 1em;
-            box-sizing: border-box;
+            box-sizing: border-box; 
         }
 
         .form-group-inline input[type="text"] {
@@ -158,7 +144,7 @@
             font-weight: 500;
             cursor: pointer;
             transition: background-color 0.3s ease;
-            width: 100%;
+            width: 100%; /* Botões ocupam 100% por padrão */
         }
 
         button:hover {
@@ -187,8 +173,8 @@
         }
         
         #add-employee-btn {
-            width: auto;
-            white-space: nowrap;
+            width: auto; 
+            white-space: nowrap; 
         }
 
         .form-grid {
@@ -200,19 +186,19 @@
         .results-summary {
             display: flex;
             justify-content: space-around;
-            flex-wrap: wrap;
+            flex-wrap: wrap; 
             background-color: var(--secondary-color);
             padding: 20px;
             border-radius: 6px;
             margin-bottom: 20px;
             text-align: center;
-            gap: 15px;
+            gap: 15px; 
         }
 
         .results-summary div {
             font-size: 1.1em;
             color: var(--text-light);
-            flex-basis: 200px;
+            flex-basis: 200px; 
         }
 
         .results-summary .highlight {
@@ -225,21 +211,19 @@
             color: var(--primary-color);
             border-top: 2px solid var(--border-color);
             padding-top: 10px;
-            flex-basis: 100%;
+            flex-basis: 100%; 
             font-size: 1.4em !important;
         }
 
         .table-container {
             width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
+            overflow-x: auto; 
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
-            min-width: 600px;
         }
 
         th, td {
@@ -263,6 +247,7 @@
             background-color: var(--secondary-color);
         }
 
+
         .text-danger {
             color: var(--danger-color);
             font-weight: 500;
@@ -274,20 +259,20 @@
         }
         
         .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
             left: 0;
             top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.5);
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.5); 
         }
 
         .modal-content {
             background-color: var(--card-bg);
-            margin: 15% auto;
+            margin: 15% auto; 
             padding: 25px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
@@ -341,182 +326,79 @@
             width: auto;
         }
 
-        /* === SEÇÃO DE RESPONSIVIDADE OTIMIZADA === */
+        /* === INÍCIO DA OTIMIZAÇÃO: Deixa o card de lançamentos menor === */
+        #time-entry-card .form-grid {
+            gap: 10px 20px; /* Reduz o gap vertical (original 15px) */
+        }
         
-        /* Telas pequenas (tablets e smartphones grandes) */
-        @media (max-width: 768px) {
-            body {
-                padding: 15px;
-            }
+        #time-entry-card .form-group {
+            margin-bottom: 5px; /* Reduz a margem entre os grupos (original 15px) */
+        }
+
+        #time-entry-card .form-group label {
+            margin-bottom: 3px; /* Espaço menor entre label e input (original 5px) */
+            font-size: 0.95em; /* Label um pouco menor */
+        }
+
+        #time-entry-card input[type="time"],
+        #time-entry-card input[type="date"] {
+            padding: 9px 10px; /* Padding vertical e horizontal menores (original 12px) */
+        }
+        /* === FIM DA OTIMIZAÇÃO === */
+
+
+        /* === SEÇÃO DE RESPONSIVIDADE (COM MELHORIAS) === */
+        @media (max-width: 600px) {
             
-            .container {
-                gap: 15px;
+            /* === NOVA OTIMIZAÇÃO: Reduz o padding em telas pequenas === */
+            body {
+                padding: 10px; /* Original era 20px */
             }
             
             .card {
-                padding: 15px;
+                padding: 15px; /* Original era 25px */
             }
+            /* === FIM DA NOVA OTIMIZAÇÃO === */
+            
             
             .form-grid {
                 grid-template-columns: 1fr;
-                gap: 10px;
             }
-            
-            .results-summary {
-                padding: 15px;
-                gap: 10px;
-            }
-            
-            .results-summary div {
-                flex-basis: 150px;
-                font-size: 1em;
-            }
-            
-            .results-summary .highlight {
-                font-size: 1.1em;
-            }
-            
-            #total-overtime-history {
-                font-size: 1.2em !important;
-            }
-            
-            th, td {
-                padding: 10px 12px;
-            }
-        }
-        
-        /* Telas muito pequenas (smartphones) */
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-                font-size: 14px;
-            }
-            
-            .container {
-                gap: 10px;
-            }
-            
-            .card {
-                padding: 12px;
-                border-radius: 6px;
-            }
-            
+
             .form-group-inline {
                 flex-direction: column;
-                gap: 10px;
             }
             
-            #add-employee-btn {
-                width: 100%;
+            /* * === OTIMIZAÇÃO 1 ===
+             * As regras abaixo foram removidas para permitir que 
+             * '.form-group-inline' (o campo de adicionar funcionário)
+             * também adote o 'flex-direction: column' em telas pequenas.
+             */
+            
+            /* #employee-manager .form-group-inline {
+                flex-direction: row; 
             }
             
-            .results-summary {
-                flex-direction: column;
-                text-align: left;
-                padding: 12px;
+            #employee-manager .form-group-inline button {
+                width: auto; 
             }
+            */
             
-            .results-summary div {
-                flex-basis: auto;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            
-            .results-summary .highlight {
-                font-size: 1.1em;
-            }
-            
-            #total-overtime-history {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 5px;
-                font-size: 1.1em !important;
-            }
-            
-            th, td {
-                padding: 8px 10px;
-                font-size: 0.9em;
+            /* === OTIMIZAÇÃO 2 === */
+            .modal-content {
+                margin: 10% auto; /* Reduz a margem superior em telas menores */
             }
             
             .report-actions {
                 flex-direction: column;
-                align-items: stretch;
             }
             
             .report-actions select,
             .report-actions button {
                 width: 100%;
-                min-width: auto;
-            }
-            
-            .modal-content {
-                margin: 10% auto;
-                padding: 20px;
-                width: 95%;
-            }
-            
-            #open-settings-btn {
-                width: 100%;
-                justify-content: center;
             }
         }
         
-        /* Telas extremamente pequenas */
-        @media (max-width: 400px) {
-            body {
-                padding: 8px;
-            }
-            
-            .card {
-                padding: 10px;
-            }
-            
-            .form-group label {
-                font-size: 0.9rem;
-            }
-            
-            input[type="text"],
-            input[type="time"],
-            input[type="date"],
-            select {
-                padding: 10px;
-                font-size: 0.95em;
-            }
-            
-            button {
-                padding: 10px 15px;
-            }
-            
-            th, td {
-                padding: 6px 8px;
-                font-size: 0.85em;
-            }
-            
-            table {
-                min-width: 500px;
-            }
-        }
-        
-        /* Melhorias para orientação paisagem em dispositivos móveis */
-        @media (max-height: 500px) and (orientation: landscape) {
-            body {
-                padding: 10px;
-            }
-            
-            .container {
-                gap: 10px;
-            }
-            
-            .card {
-                padding: 10px;
-            }
-            
-            .form-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
         @media print {
             header, #employee-manager, #time-entry-card, #settings-modal, footer,
             #total-worked, #standard-worked, #overtime-total, .report-actions {
@@ -548,8 +430,8 @@
                 text-align: left;
                 padding-top: 0;
                 border-top: none;
-                flex-basis: auto;
-                font-size: 1.3em !important;
+                flex-basis: auto; 
+                font-size: 1.3em !important; 
             }
             
             #results-card h2, #results-card h3 {
@@ -1006,7 +888,7 @@
                 if (!selectedName) {
                     alert('Por favor, selecione um funcionário.');
                     return;
-                }
+S                }
 
                 const date = entryDate.value;
                 const entry = entryTime.value;
