@@ -118,10 +118,13 @@
             margin-bottom: 15px;
         }
 
+        /* === INÍCIO DA CORREÇÃO iOS/SAFARI === */
+        /* Regra para inputs de texto, data e hora */
         input[type="text"],
         input[type="time"],
-        input[type="date"],
-        select {
+        input[type="date"] {
+            -webkit-appearance: none; /* Remove o estilo nativo do iOS/Safari */
+            appearance: none;
             width: 100%;
             padding: 12px;
             border: 1px solid var(--border-color);
@@ -129,6 +132,19 @@
             font-size: 1em;
             box-sizing: border-box; 
         }
+
+        /* Regra separada para o SELECT, para manter o estilo nativo (seta) */
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1em;
+            box-sizing: border-box; 
+            /* appearance: none; deixado de fora de propósito */
+        }
+        /* === FIM DA CORREÇÃO iOS/SAFARI === */
+
 
         .form-group-inline input[type="text"] {
             flex-grow: 1;
@@ -345,8 +361,8 @@
             padding: 9px 10px; /* Padding vertical e horizontal menores (original 12px) */
             
             /* === CORREÇÃO CRÍTICA (Bug do Safari) === */
-            /* Esta regra é necessária para sobrescrever o user-agent do Safari */
-            /* que ignora o 'width: 100%' da regra global menos específica */
+            -webkit-appearance: none; /* Garante a remoção do estilo nativo */
+            appearance: none;
             width: 100%;
             box-sizing: border-box;
             /* === FIM DA CORREÇÃO === */
