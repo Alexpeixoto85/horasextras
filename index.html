@@ -343,6 +343,13 @@
         #time-entry-card input[type="time"],
         #time-entry-card input[type="date"] {
             padding: 9px 10px; /* Padding vertical e horizontal menores (original 12px) */
+            
+            /* === CORREÇÃO CRÍTICA (Bug do Safari) === */
+            /* Esta regra é necessária para sobrescrever o user-agent do Safari */
+            /* que ignora o 'width: 100%' da regra global menos específica */
+            width: 100%;
+            box-sizing: border-box;
+            /* === FIM DA CORREÇÃO === */
         }
         /* === FIM DA OTIMIZAÇÃO === */
 
@@ -888,7 +895,7 @@
                 if (!selectedName) {
                     alert('Por favor, selecione um funcionário.');
                     return;
-S                }
+                }
 
                 const date = entryDate.value;
                 const entry = entryTime.value;
