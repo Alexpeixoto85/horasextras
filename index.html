@@ -327,6 +327,7 @@
         }
 
 
+        /* === SEÇÃO DE RESPONSIVIDADE === */
         @media (max-width: 600px) {
             .form-grid {
                 grid-template-columns: 1fr;
@@ -336,12 +337,24 @@
                 flex-direction: column;
             }
             
-            #employee-manager .form-group-inline {
+            /* * === OTIMIZAÇÃO 1 ===
+             * As regras abaixo foram removidas para permitir que 
+             * '.form-group-inline' (o campo de adicionar funcionário)
+             * também adote o 'flex-direction: column' em telas pequenas.
+             */
+            
+            /* #employee-manager .form-group-inline {
                 flex-direction: row; 
             }
             
             #employee-manager .form-group-inline button {
                 width: auto; 
+            }
+            */
+            
+            /* === OTIMIZAÇÃO 2 === */
+            .modal-content {
+                margin: 10% auto; /* Reduz a margem superior em telas menores */
             }
             
             .report-actions {
