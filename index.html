@@ -234,6 +234,25 @@
             align-items: center;
         }
 
+        /* Employee Name Display */
+        .employee-name-display {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: var(--primary-light);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            margin-left: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .dark-mode .employee-name-display {
+            background: rgba(156, 39, 176, 0.2);
+        }
+
         /* Cards Elegantes */
         .card {
             background: var(--card-bg);
@@ -795,6 +814,17 @@
             .main-content {
                 padding: 20px;
             }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .employee-name-display {
+                margin-left: 0;
+                align-self: flex-start;
+            }
         }
 
         @media (max-width: 768px) {
@@ -819,6 +849,10 @@
             .header-actions {
                 width: 100%;
                 justify-content: space-between;
+            }
+            
+            .employee-name-display {
+                margin-left: 0;
             }
             
             .table {
@@ -1016,7 +1050,12 @@
         <!-- Main Content -->
         <main class="main-content">
             <header class="header">
-                <h1>Gestão de Horas Extras</h1>
+                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 15px;">
+                    <h1>Gestão de Horas Extras</h1>
+                    <div class="employee-name-display" id="employee-name-display" style="display: none;">
+                        👤 <span id="selected-employee-name">Nenhum funcionário selecionado</span>
+                    </div>
+                </div>
                 <div class="header-actions">
                     <div class="balance-indicator" id="balance-indicator">
                         <span>Saldo Atual: </span>
@@ -1380,10 +1419,6 @@
                     break;
                     
                 case 'time-entry-modal':
-                    if (!currentEmployee) {
-                        showNotification('Por favor, selecione um funcionário primeiro.', 'warning');
-                        return;
-                    }
                     initTimeEntryModal();
                     break;
                     
@@ -1538,10 +1573,25 @@
         function selectEmployee(employeeName) {
             currentEmployee = employeeName;
             updateEmployeeList();
+            updateEmployeeNameDisplay();
             updateStatistics();
             updateInitialBalanceDisplay();
             updateBalanceSummary();
             refreshHistory();
+        }
+
+        // Atualizar exibição do nome do funcionário no cabeçalho
+        function updateEmployeeNameDisplay() {
+            const displayElement = document.getElementById('employee-name-display');
+            const nameElement = document.getElementById('selected-employee-name');
+            
+            if (currentEmployee) {
+                nameElement.textContent = currentEmployee;
+                displayElement.style.display = 'flex';
+            } else {
+                nameElement.textContent = 'Nenhum funcionário selecionado';
+                displayElement.style.display = 'none';
+            }
         }
 
         // Time calculations
@@ -1704,14 +1754,38 @@
             
             saveData();
             
+            // Atualizar TODOS os componentes da UI instantaneamente
+            updateAllUIComponents(employee);
+            
+            closeModal('time-entry-modal');
+            showNotification('Horários lançados com sucesso!', 'success');
+        }
+
+        // Função para atualizar todos os componentes da UI de uma vez
+        function updateAllUIComponents(employee) {
+            updateEmployeeList();
             if (employee === currentEmployee) {
                 updateStatistics();
                 updateBalanceSummary();
                 refreshHistory();
             }
-            
-            closeModal('time-entry-modal');
-            showNotification('Horários lançados com sucesso!', 'success');
+            // Atualizar o saldo do funcionário na lista lateral
+            updateEmployeeBalanceInSidebar(employee);
+        }
+
+        // Atualizar saldo do funcionário na lista lateral
+        function updateEmployeeBalanceInSidebar(employee) {
+            const employeeItems = document.querySelectorAll('.employee-item');
+            employeeItems.forEach(item => {
+                if (item.dataset.employee === employee) {
+                    const totalBalance = calculateTotalBalance(employee);
+                    const hoursElement = item.querySelector('.employee-hours');
+                    if (hoursElement) {
+                        hoursElement.textContent = minutesToHHMM(totalBalance);
+                        hoursElement.className = `employee-hours ${totalBalance >= 0 ? 'badge-success' : 'badge-danger'}`;
+                    }
+                }
+            });
         }
 
         // History management
@@ -1969,11 +2043,8 @@
                 
                 saveData();
                 
-                if (employee === currentEmployee) {
-                    updateStatistics();
-                    updateBalanceSummary();
-                    refreshHistory();
-                }
+                // Atualizar TODOS os componentes da UI instantaneamente
+                updateAllUIComponents(employee);
                 
                 closeModal('edit-entry-modal');
                 showNotification('Lançamento atualizado com sucesso!', 'success');
@@ -1991,11 +2062,8 @@
             db.entries[employee] = entries.filter(e => e.id !== currentEditingEntryId);
             saveData();
             
-            if (employee === currentEmployee) {
-                updateStatistics();
-                updateBalanceSummary();
-                refreshHistory();
-            }
+            // Atualizar TODOS os componentes da UI instantaneamente
+            updateAllUIComponents(employee);
             
             closeModal('edit-entry-modal');
             showNotification('Lançamento excluído!', 'success');
@@ -2005,9 +2073,10 @@
             if (confirm('Tem certeza que deseja excluir este lançamento?')) {
                 db.entries[currentEmployee] = db.entries[currentEmployee].filter(e => e.id !== entryId);
                 saveData();
-                updateStatistics();
-                updateBalanceSummary();
-                refreshHistory();
+                
+                // Atualizar TODOS os componentes da UI instantaneamente
+                updateAllUIComponents(currentEmployee);
+                
                 showNotification('Lançamento excluído!', 'success');
             }
         }
@@ -2085,12 +2154,9 @@
             
             saveData();
             
-            if (employee === currentEmployee) {
-                updateStatistics();
-                updateBalanceSummary();
-            }
+            // Atualizar TODOS os componentes da UI instantaneamente
+            updateAllUIComponents(employee);
             
-            updateEmployeeList();
             closeModal('initial-balance-modal');
             
             const balanceDisplay = minutesToHHMM(balanceMinutes);
