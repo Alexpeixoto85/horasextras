@@ -4,10 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Horas Extras Pro - Modal Edition</title>
+    <title>Gestor de Horas Extras Pro - Importação Excel</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <!-- Adicionando SheetJS para leitura de Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
@@ -635,7 +637,7 @@
             background: var(--card-bg);
             border-radius: var(--radius-lg);
             padding: 32px;
-            max-width: 600px;
+            max-width: 800px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
@@ -994,6 +996,156 @@
             border-color: var(--danger-color);
             background: linear-gradient(135deg, rgba(244, 67, 54, 0.1), rgba(244, 67, 54, 0.05));
         }
+
+        /* Importação Progress */
+        .import-progress {
+            margin: 20px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        /* Preview Table */
+        .preview-table-container {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            margin: 20px 0;
+        }
+
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .preview-table th {
+            background: var(--primary-light);
+            padding: 8px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            font-weight: 600;
+        }
+
+        .preview-table td {
+            padding: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .preview-table tr:nth-child(even) {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .dark-mode .preview-table tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Import Success Summary */
+        .import-summary {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05));
+            border: 1px solid var(--success-color);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .import-error {
+            background: linear-gradient(135deg, rgba(244, 67, 54, 0.1), rgba(244, 67, 54, 0.05));
+            border: 1px solid var(--danger-color);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        .import-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: var(--card-bg);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-value-large {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 5px 0;
+        }
+
+        .file-drop-area {
+            border: 2px dashed var(--primary-color);
+            border-radius: var(--radius-md);
+            padding: 60px 20px;
+            text-align: center;
+            transition: var(--transition);
+            margin: 20px 0;
+            background: rgba(156, 39, 176, 0.05);
+        }
+
+        .file-drop-area:hover {
+            background: rgba(156, 39, 176, 0.1);
+        }
+
+        .file-drop-area.dragover {
+            background: rgba(156, 39, 176, 0.2);
+            border-color: var(--secondary-color);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            padding: 10px;
+            background: var(--card-bg);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .file-icon {
+            font-size: 24px;
+        }
+
+        .file-name {
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: var(--text-light);
+        }
     </style>
 </head>
 <body>
@@ -1019,6 +1171,9 @@
                 </button>
                 <button class="btn btn-accent" style="width: 100%; margin-bottom: 10px;" onclick="openModal('time-entry-modal')">
                     ⏰ Lançar Horários
+                </button>
+                <button class="btn btn-success" style="width: 100%; margin-bottom: 10px;" onclick="openModal('import-excel-modal')">
+                    📊 Importar Excel
                 </button>
                 <button class="btn btn-info" style="width: 100%;" onclick="openModal('initial-balance-modal')">
                     💰 Saldo Inicial
@@ -1115,11 +1270,11 @@
 
             <!-- Botão de Ação Principal -->
             <div class="action-button-container">
-                <button class="action-button" onclick="openModal('time-entry-modal')">
-                    ⏰ Lançar Novos Horários
+                <button class="action-button" onclick="openModal('import-excel-modal')">
+                    📊 Importar Arquivo Excel
                 </button>
                 <p style="margin-top: 15px; color: var(--text-light); font-size: 14px;">
-                    Clique para adicionar novos horários para o funcionário selecionado
+                    Importe o arquivo de ponto em Excel para lançar automaticamente os horários de todos os funcionários
                 </p>
             </div>
 
@@ -1152,6 +1307,10 @@
             <div class="form-group">
                 <label class="form-label">Nome do Funcionário</label>
                 <input type="text" id="new-employee-name" class="form-control" placeholder="Digite o nome completo">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Código (Opcional)</label>
+                <input type="text" id="employee-code" class="form-control" placeholder="Ex: 008">
             </div>
             <div class="form-group">
                 <label class="form-label">Saldo Inicial de Horas Extras (Opcional)</label>
@@ -1233,6 +1392,122 @@
                     👁️ Pré-visualizar
                 </button>
                 <button class="btn btn-danger" onclick="closeModal('time-entry-modal')">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Importação de Excel -->
+    <div class="modal" id="import-excel-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Importar Arquivo Excel</div>
+                <button class="modal-close" onclick="closeModal('import-excel-modal')">×</button>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Arquivo Excel de Ponto</label>
+                <p style="color: var(--text-light); font-size: 14px; margin-bottom: 10px;">
+                    Selecione o arquivo Excel no formato "Cartão Ponto.xlsx" para importar automaticamente os registros de ponto.
+                </p>
+                
+                <div class="file-drop-area" id="file-drop-area">
+                    <div style="font-size: 48px; margin-bottom: 15px;">📊</div>
+                    <p style="font-weight: 500; margin-bottom: 10px;">Arraste e solte seu arquivo Excel aqui</p>
+                    <p style="color: var(--text-light); font-size: 14px; margin-bottom: 20px;">ou</p>
+                    
+                    <label class="btn btn-primary" style="cursor: pointer;">
+                        📁 Selecionar Arquivo
+                        <input type="file" id="excel-file-input" accept=".xlsx,.xls" style="display: none;" onchange="handleFileSelect(this.files)">
+                    </label>
+                    
+                    <div class="file-info" id="file-info" style="display: none;">
+                        <div class="file-icon">📄</div>
+                        <div>
+                            <div class="file-name" id="file-name">Arquivo selecionado</div>
+                            <div class="file-size" id="file-size">0 KB</div>
+                        </div>
+                        <button class="btn btn-icon" onclick="clearSelectedFile()" style="margin-left: auto;">🗑️</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Mês/Ano de Referência</label>
+                <input type="month" id="import-reference-month" class="form-control" value="">
+                <small style="color: var(--text-light); font-size: 12px; margin-top: 4px;">
+                    Selecione o mês e ano dos registros de ponto (importante para datas no Excel)
+                </small>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Opções de Importação</label>
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="skip-duplicates" checked>
+                        <span>Pular registros duplicados (mesma data para o mesmo funcionário)</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="create-missing-employees" checked>
+                        <span>Criar funcionários automaticamente se não existirem</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="override-existing" checked>
+                        <span>Sobrescrever registros existentes</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="include-code" checked>
+                        <span>Incluir código no nome do funcionário (ex: 008 - LILIANE PEREIRA DA SILVA)</span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="import-progress" id="import-progress" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="progress-text">
+                    <span id="progress-current">0</span>
+                    <span id="progress-total">0</span>
+                </div>
+            </div>
+            
+            <!-- Preview Table -->
+            <div class="preview-table-container" id="preview-table-container" style="display: none;">
+                <table class="preview-table" id="preview-table">
+                    <thead>
+                        <tr>
+                            <th>Funcionário</th>
+                            <th>Data</th>
+                            <th>Entrada</th>
+                            <th>Saída Almoço</th>
+                            <th>Retorno</th>
+                            <th>Saída</th>
+                            <th>Extras</th>
+                        </tr>
+                    </thead>
+                    <tbody id="preview-table-body">
+                        <!-- Preview rows will be added here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Import Summary -->
+            <div id="import-summary" style="display: none;"></div>
+            
+            <!-- Import Errors -->
+            <div id="import-errors" style="display: none;"></div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-success" style="flex: 1;" onclick="processExcelFile()" id="process-button" disabled>
+                    ⚙️ Processar Arquivo
+                </button>
+                <button class="btn btn-info" onclick="previewExcelData()" id="preview-button" disabled>
+                    👁️ Pré-visualizar
+                </button>
+                <button class="btn btn-danger" onclick="closeModal('import-excel-modal')">
                     Cancelar
                 </button>
             </div>
@@ -1353,7 +1628,8 @@
     <script>
         // Database structure with initial balance support
         let db = {
-            employees: [],
+            employees: [], // Array de nomes de funcionários
+            employeeDetails: {}, // Detalhes dos funcionários (código, nome completo, etc)
             entries: {},
             initialBalances: {}, // Saldo inicial fixo de horas extras
             balanceHistory: {}, // Histórico de saldos (opcional)
@@ -1369,12 +1645,20 @@
 
         let currentEmployee = null;
         let currentEditingEntryId = null;
+        let excelFileData = null;
+        let excelPreviewData = [];
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             loadData();
             initEventListeners();
             updateUI();
+            
+            // Set current month as default
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            document.getElementById('import-reference-month').value = `${yyyy}-${mm}`;
         });
 
         function initEventListeners() {
@@ -1404,6 +1688,28 @@
                     input.addEventListener('change', previewCalculation);
                 }
             });
+            
+            // File drop area events
+            const fileDropArea = document.getElementById('file-drop-area');
+            if (fileDropArea) {
+                fileDropArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    fileDropArea.classList.add('dragover');
+                });
+                
+                fileDropArea.addEventListener('dragleave', () => {
+                    fileDropArea.classList.remove('dragover');
+                });
+                
+                fileDropArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    fileDropArea.classList.remove('dragover');
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        handleFileSelect(files);
+                    }
+                });
+            }
         }
 
         // Modal Management
@@ -1415,11 +1721,16 @@
             switch(modalId) {
                 case 'add-employee-modal':
                     document.getElementById('new-employee-name').value = '';
+                    document.getElementById('employee-code').value = '';
                     document.getElementById('initial-balance').value = '';
                     break;
                     
                 case 'time-entry-modal':
                     initTimeEntryModal();
+                    break;
+                    
+                case 'import-excel-modal':
+                    initImportModal();
                     break;
                     
                 case 'initial-balance-modal':
@@ -1471,6 +1782,31 @@
             document.getElementById('entry-preview').style.display = 'none';
         }
 
+        function initImportModal() {
+            // Reset file input
+            document.getElementById('excel-file-input').value = '';
+            document.getElementById('file-info').style.display = 'none';
+            document.getElementById('preview-table-container').style.display = 'none';
+            document.getElementById('import-progress').style.display = 'none';
+            document.getElementById('import-summary').innerHTML = '';
+            document.getElementById('import-summary').style.display = 'none';
+            document.getElementById('import-errors').innerHTML = '';
+            document.getElementById('import-errors').style.display = 'none';
+            
+            // Disable buttons
+            document.getElementById('process-button').disabled = true;
+            document.getElementById('preview-button').disabled = true;
+            
+            excelFileData = null;
+            excelPreviewData = [];
+            
+            // Set current month as default
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            document.getElementById('import-reference-month').value = `${yyyy}-${mm}`;
+        }
+
         function initBalanceModal() {
             const select = document.getElementById('balance-employee-select');
             select.innerHTML = '';
@@ -1500,10 +1836,511 @@
             document.getElementById('standard-end').value = db.settings.standardEnd;
         }
 
+        function handleFileSelect(files) {
+            if (!files || files.length === 0) return;
+            
+            const file = files[0];
+            const validExtensions = ['.xlsx', '.xls'];
+            const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+            
+            if (!validExtensions.includes(fileExtension)) {
+                showNotification('Por favor, selecione um arquivo Excel (.xlsx ou .xls)', 'warning');
+                return;
+            }
+            
+            // Show file info
+            document.getElementById('file-info').style.display = 'flex';
+            document.getElementById('file-name').textContent = file.name;
+            document.getElementById('file-size').textContent = formatFileSize(file.size);
+            
+            // Enable buttons
+            document.getElementById('process-button').disabled = false;
+            document.getElementById('preview-button').disabled = false;
+            
+            // Read file
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    excelFileData = workbook;
+                    showNotification('Arquivo carregado com sucesso! Clique em "Pré-visualizar" para ver os dados.', 'success');
+                } catch (error) {
+                    showNotification('Erro ao ler o arquivo Excel: ' + error.message, 'error');
+                    console.error('Error reading Excel file:', error);
+                }
+            };
+            
+            reader.onerror = function() {
+                showNotification('Erro ao ler o arquivo. Tente novamente.', 'error');
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+
+        function clearSelectedFile() {
+            document.getElementById('excel-file-input').value = '';
+            document.getElementById('file-info').style.display = 'none';
+            document.getElementById('process-button').disabled = true;
+            document.getElementById('preview-button').disabled = true;
+            document.getElementById('preview-table-container').style.display = 'none';
+            excelFileData = null;
+            excelPreviewData = [];
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function previewExcelData() {
+            if (!excelFileData) {
+                showNotification('Nenhum arquivo carregado.', 'warning');
+                return;
+            }
+            
+            try {
+                // Parse Excel data based on the template structure
+                const parsedData = parseExcelData(excelFileData);
+                excelPreviewData = parsedData;
+                
+                // Show preview table
+                const tableBody = document.getElementById('preview-table-body');
+                tableBody.innerHTML = '';
+                
+                parsedData.forEach((entry, index) => {
+                    if (index < 20) { // Show only first 20 rows in preview
+                        const row = document.createElement('tr');
+                        
+                        // Highlight if employee doesn't exist
+                        const employeeExists = db.employees.includes(entry.employeeName);
+                        if (!employeeExists) {
+                            row.style.backgroundColor = 'rgba(255, 193, 7, 0.1)';
+                        }
+                        
+                        row.innerHTML = `
+                            <td>${entry.employeeName} ${!employeeExists ? '⚠️' : ''}</td>
+                            <td>${entry.date}</td>
+                            <td>${entry.entry || '-'}</td>
+                            <td>${entry.lunchOut || '-'}</td>
+                            <td>${entry.lunchIn || '-'}</td>
+                            <td>${entry.exit || '-'}</td>
+                            <td>${entry.overtimeMinutes ? minutesToHHMM(entry.overtimeMinutes) : '-'}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    }
+                });
+                
+                // Show table and summary
+                document.getElementById('preview-table-container').style.display = 'block';
+                
+                // Show summary
+                const uniqueEmployees = [...new Set(parsedData.map(e => e.employeeName))];
+                const totalEntries = parsedData.length;
+                const totalWithCompleteData = parsedData.filter(e => e.entry && e.lunchOut && e.lunchIn && e.exit).length;
+                const newEmployees = uniqueEmployees.filter(name => !db.employees.includes(name));
+                
+                const summary = document.getElementById('import-summary');
+                summary.innerHTML = `
+                    <div class="import-summary">
+                        <strong>Pré-visualização dos dados:</strong>
+                        <div class="import-stats">
+                            <div class="stat-item">
+                                <div>Funcionários</div>
+                                <div class="stat-value-large">${uniqueEmployees.length}</div>
+                                <div>${newEmployees.length} novos</div>
+                            </div>
+                            <div class="stat-item">
+                                <div>Registros</div>
+                                <div class="stat-value-large">${totalEntries}</div>
+                                <div>${totalWithCompleteData} completos</div>
+                            </div>
+                            <div class="stat-item">
+                                <div>Período</div>
+                                <div class="stat-value-large">${parsedData[0]?.date || '-'}</div>
+                                <div>até ${parsedData[parsedData.length-1]?.date || '-'}</div>
+                            </div>
+                        </div>
+                        ${totalEntries > 20 ? `<p style="margin-top: 10px; font-size: 12px; color: var(--text-light);">Mostrando 20 de ${totalEntries} registros...</p>` : ''}
+                    </div>
+                `;
+                summary.style.display = 'block';
+                
+                showNotification(`Dados carregados: ${totalEntries} registros de ${uniqueEmployees.length} funcionários`, 'success');
+                
+            } catch (error) {
+                showNotification('Erro ao processar o arquivo Excel: ' + error.message, 'error');
+                console.error('Error parsing Excel data:', error);
+            }
+        }
+
+        function parseExcelData(workbook) {
+            const result = [];
+            const includeCode = document.getElementById('include-code').checked;
+            
+            // Get all sheet names
+            const sheetNames = workbook.SheetNames;
+            
+            // For each sheet (each sheet is an employee's month)
+            sheetNames.forEach(sheetName => {
+                const worksheet = workbook.Sheets[sheetName];
+                const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: null });
+                
+                // Find employee information in the sheet
+                let employeeCode = null;
+                let employeeName = null;
+                let employeeFound = false;
+                
+                // Look for employee information in the first few rows
+                for (let i = 0; i < Math.min(10, data.length); i++) {
+                    const row = data[i];
+                    if (row && row.length > 0) {
+                        for (let j = 0; j < row.length; j++) {
+                            const cellValue = row[j];
+                            if (cellValue && typeof cellValue === 'string') {
+                                // Try to extract employee code and name from the cell
+                                // Pattern: "008 - LILIANE PEREIRA DA SILVA"
+                                const nameMatch = cellValue.match(/(\d{3})\s*-\s*([A-ZÀ-Ÿ][A-ZÀ-Ÿ\s]+)/i);
+                                if (nameMatch) {
+                                    employeeCode = nameMatch[1].trim();
+                                    employeeName = includeCode ? 
+                                        `${employeeCode} - ${nameMatch[2].trim()}` : 
+                                        nameMatch[2].trim();
+                                    employeeFound = true;
+                                    break;
+                                }
+                                
+                                // Alternative pattern for employee name
+                                const altMatch = cellValue.match(/(\d{3})\s*-\s*([A-ZÀ-Ÿ][A-ZÀ-Ÿ\s]+[A-ZÀ-Ÿ])/i);
+                                if (altMatch) {
+                                    employeeCode = altMatch[1].trim();
+                                    employeeName = includeCode ? 
+                                        `${employeeCode} - ${altMatch[2].trim()}` : 
+                                        altMatch[2].trim();
+                                    employeeFound = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (employeeFound) break;
+                    }
+                }
+                
+                // If no name found in first rows, use sheet name
+                if (!employeeFound) {
+                    employeeName = sheetName;
+                }
+                
+                // Get reference month from input
+                const referenceMonth = document.getElementById('import-reference-month').value;
+                const [refYear, refMonth] = referenceMonth.split('-').map(Number);
+                
+                // Parse time entries (rows with day numbers)
+                for (let i = 0; i < data.length; i++) {
+                    const row = data[i];
+                    if (row && row.length >= 8) {
+                        const day = parseInt(row[0]);
+                        
+                        // Check if this is a day row (day number between 1-31)
+                        if (!isNaN(day) && day >= 1 && day <= 31) {
+                            const dayOfWeek = row[1] || '';
+                            
+                            // Time columns based on the template structure:
+                            // Column 2: Entrada, Column 3: Saída Almoço, Column 4: Retorno Almoço, Column 5: Saída
+                            const entryTime = formatTimeValue(row[2]);
+                            const lunchOutTime = formatTimeValue(row[3]);
+                            const lunchInTime = formatTimeValue(row[4]);
+                            const exitTime = formatTimeValue(row[5]);
+                            
+                            // Skip if no times are recorded
+                            if (!entryTime && !lunchOutTime && !lunchInTime && !exitTime) {
+                                continue;
+                            }
+                            
+                            // Create date string
+                            const dateStr = `${refYear}-${String(refMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                            
+                            // Calculate overtime
+                            let overtimeMinutes = 0;
+                            if (entryTime && lunchOutTime && lunchInTime && exitTime) {
+                                const entry = {
+                                    entry: entryTime,
+                                    lunchOut: lunchOutTime,
+                                    lunchIn: lunchInTime,
+                                    exit: exitTime
+                                };
+                                overtimeMinutes = calculateDailyOvertime(entry);
+                            }
+                            
+                            result.push({
+                                employeeName: employeeName,
+                                employeeCode: employeeCode,
+                                date: dateStr,
+                                entry: entryTime,
+                                lunchOut: lunchOutTime,
+                                lunchIn: lunchInTime,
+                                exit: exitTime,
+                                overtimeMinutes: overtimeMinutes,
+                                dayOfWeek: dayOfWeek,
+                                sheetName: sheetName
+                            });
+                        }
+                    }
+                }
+            });
+            
+            // Sort by date
+            result.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            return result;
+        }
+
+        function formatTimeValue(value) {
+            if (!value) return null;
+            
+            // Handle Excel time values (fraction of day)
+            if (typeof value === 'number') {
+                // Excel stores times as fractions of a day
+                const totalSeconds = value * 24 * 60 * 60;
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+            }
+            
+            // Handle string values
+            if (typeof value === 'string') {
+                const timeMatch = value.match(/(\d{1,2})[:h](\d{2})/);
+                if (timeMatch) {
+                    const hours = parseInt(timeMatch[1]);
+                    const minutes = parseInt(timeMatch[2]);
+                    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                }
+                
+                // Also try to parse times like "8:00" or "8h00"
+                const timeMatch2 = value.match(/(\d{1,2})[:hH](\d{2})/);
+                if (timeMatch2) {
+                    const hours = parseInt(timeMatch2[1]);
+                    const minutes = parseInt(timeMatch2[2]);
+                    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                }
+                
+                // Check for empty cells or placeholders
+                if (value.trim() === '' || value === '-' || value === '--' || value.toLowerCase() === 'folga') {
+                    return null;
+                }
+            }
+            
+            return null;
+        }
+
+        function processExcelFile() {
+            if (!excelPreviewData || excelPreviewData.length === 0) {
+                showNotification('Nenhum dado para processar. Clique em "Pré-visualizar" primeiro.', 'warning');
+                return;
+            }
+            
+            const skipDuplicates = document.getElementById('skip-duplicates').checked;
+            const createMissingEmployees = document.getElementById('create-missing-employees').checked;
+            const overrideExisting = document.getElementById('override-existing').checked;
+            
+            // Show progress bar
+            document.getElementById('import-progress').style.display = 'block';
+            document.getElementById('progress-fill').style.width = '0%';
+            document.getElementById('progress-current').textContent = '0';
+            document.getElementById('progress-total').textContent = excelPreviewData.length;
+            
+            // Disable buttons during import
+            document.getElementById('process-button').disabled = true;
+            document.getElementById('preview-button').disabled = true;
+            
+            // Process in batches to avoid blocking UI
+            let processed = 0;
+            let added = 0;
+            let skipped = 0;
+            let errors = 0;
+            const errorsList = [];
+            
+            function processBatch(startIndex, batchSize) {
+                const endIndex = Math.min(startIndex + batchSize, excelPreviewData.length);
+                
+                for (let i = startIndex; i < endIndex; i++) {
+                    const entryData = excelPreviewData[i];
+                    
+                    try {
+                        // Check if employee exists
+                        if (!db.employees.includes(entryData.employeeName)) {
+                            if (createMissingEmployees) {
+                                db.employees.push(entryData.employeeName);
+                                db.entries[entryData.employeeName] = [];
+                                
+                                // Store employee details
+                                db.employeeDetails[entryData.employeeName] = {
+                                    code: entryData.employeeCode,
+                                    fullName: entryData.employeeName,
+                                    importDate: new Date().toISOString()
+                                };
+                                
+                                showNotification(`Funcionário criado: ${entryData.employeeName}`, 'info');
+                            } else {
+                                errors++;
+                                errorsList.push(`Funcionário não existe: ${entryData.employeeName} (${entryData.date})`);
+                                processed++;
+                                updateProgress();
+                                continue;
+                            }
+                        }
+                        
+                        // Check for existing entry for this date
+                        const existingEntries = db.entries[entryData.employeeName] || [];
+                        const existingIndex = existingEntries.findIndex(e => e.date === entryData.date);
+                        
+                        if (existingIndex > -1) {
+                            if (skipDuplicates && !overrideExisting) {
+                                skipped++;
+                                processed++;
+                                updateProgress();
+                                continue;
+                            }
+                            
+                            if (overrideExisting) {
+                                // Remove existing entry
+                                existingEntries.splice(existingIndex, 1);
+                            }
+                        }
+                        
+                        // Only add if we have complete data (all four times)
+                        if (entryData.entry && entryData.lunchOut && entryData.lunchIn && entryData.exit) {
+                            const newEntry = {
+                                id: Date.now().toString() + i,
+                                date: entryData.date,
+                                entry: entryData.entry,
+                                lunchOut: entryData.lunchOut,
+                                lunchIn: entryData.lunchIn,
+                                exit: entryData.exit,
+                                totalWorkedMinutes: entryData.overtimeMinutes + (8 * 60),
+                                overtimeMinutes: entryData.overtimeMinutes,
+                                imported: true,
+                                importDate: new Date().toISOString()
+                            };
+                            
+                            existingEntries.push(newEntry);
+                            db.entries[entryData.employeeName] = existingEntries;
+                            added++;
+                        } else {
+                            // Incomplete data - skip
+                            skipped++;
+                        }
+                        
+                    } catch (error) {
+                        errors++;
+                        errorsList.push(`Erro ao processar ${entryData.employeeName} (${entryData.date}): ${error.message}`);
+                    }
+                    
+                    processed++;
+                    updateProgress();
+                }
+                
+                if (endIndex < excelPreviewData.length) {
+                    // Process next batch
+                    setTimeout(() => processBatch(endIndex, batchSize), 10);
+                } else {
+                    // Import complete
+                    finishImport(added, skipped, errors, errorsList);
+                }
+            }
+            
+            function updateProgress() {
+                const percent = (processed / excelPreviewData.length) * 100;
+                document.getElementById('progress-fill').style.width = `${percent}%`;
+                document.getElementById('progress-current').textContent = processed;
+            }
+            
+            // Start processing
+            processBatch(0, 10);
+        }
+
+        function finishImport(added, skipped, errors, errorsList) {
+            // Save data
+            saveData();
+            
+            // Update UI
+            updateEmployeeList();
+            if (currentEmployee) {
+                updateAllUIComponents(currentEmployee);
+            }
+            
+            // Show summary
+            const summary = document.getElementById('import-summary');
+            summary.innerHTML = `
+                <div class="import-summary">
+                    <strong>✅ Importação concluída com sucesso!</strong>
+                    <div class="import-stats">
+                        <div class="stat-item">
+                            <div>Adicionados</div>
+                            <div class="stat-value-large" style="color: var(--success-color);">${added}</div>
+                            <div>registros</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Ignorados</div>
+                            <div class="stat-value-large" style="color: var(--warning-color);">${skipped}</div>
+                            <div>registros</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Erros</div>
+                            <div class="stat-value-large" style="color: ${errors > 0 ? 'var(--danger-color)' : 'var(--success-color)'};">${errors}</div>
+                            <div>registros</div>
+                        </div>
+                    </div>
+                    <p style="margin-top: 10px; font-size: 14px;">
+                        ${added} registros de ponto foram importados com sucesso.
+                        ${skipped > 0 ? `${skipped} registros foram ignorados (dados incompletos ou duplicados).` : ''}
+                    </p>
+                </div>
+            `;
+            summary.style.display = 'block';
+            
+            // Show errors if any
+            if (errorsList.length > 0) {
+                const errorsDiv = document.getElementById('import-errors');
+                errorsDiv.innerHTML = `
+                    <div class="import-error">
+                        <strong>⚠️ Erros encontrados (${errorsList.length}):</strong>
+                        <div style="max-height: 150px; overflow-y: auto; margin-top: 10px; font-family: monospace; font-size: 12px;">
+                            ${errorsList.slice(0, 10).map(err => `<div>• ${err}</div>`).join('')}
+                            ${errorsList.length > 10 ? `<div>... e mais ${errorsList.length - 10} erros</div>` : ''}
+                        </div>
+                    </div>
+                `;
+                errorsDiv.style.display = 'block';
+            }
+            
+            // Re-enable buttons
+            document.getElementById('process-button').disabled = false;
+            document.getElementById('preview-button').disabled = false;
+            
+            showNotification(`Importação concluída: ${added} registros adicionados, ${skipped} ignorados, ${errors} erros`, 'success');
+        }
+
         function loadData() {
             const savedDB = localStorage.getItem('overtimeProDB');
             if (savedDB) {
-                db = JSON.parse(savedDB);
+                const parsedDB = JSON.parse(savedDB);
+                db = parsedDB;
+                
+                // Backward compatibility: ensure employeeDetails exists
+                if (!db.employeeDetails) {
+                    db.employeeDetails = {};
+                    // Initialize employeeDetails from existing employees
+                    db.employees.forEach(employee => {
+                        db.employeeDetails[employee] = {
+                            fullName: employee,
+                            importDate: new Date().toISOString()
+                        };
+                    });
+                }
                 
                 // Apply dark mode if enabled
                 if (db.settings.darkMode) {
@@ -1550,8 +2387,12 @@
                 // Calcular o saldo total (inicial + mês corrente)
                 const totalBalance = calculateTotalBalance(employee);
                 
+                // Get employee code if available
+                const employeeCode = db.employeeDetails[employee]?.code || '';
+                const displayName = employeeCode ? `${employeeCode} - ${employee}` : employee;
+                
                 li.innerHTML = `
-                    <span>${employee}</span>
+                    <span>${displayName}</span>
                     <span class="employee-hours ${totalBalance >= 0 ? 'badge-success' : 'badge-danger'}">
                         ${minutesToHHMM(totalBalance)}
                     </span>
@@ -1586,7 +2427,11 @@
             const nameElement = document.getElementById('selected-employee-name');
             
             if (currentEmployee) {
-                nameElement.textContent = currentEmployee;
+                // Get employee code if available
+                const employeeCode = db.employeeDetails[currentEmployee]?.code || '';
+                const displayName = employeeCode ? `${employeeCode} - ${currentEmployee}` : currentEmployee;
+                
+                nameElement.textContent = displayName;
                 displayElement.style.display = 'flex';
             } else {
                 nameElement.textContent = 'Nenhum funcionário selecionado';
@@ -1788,6 +2633,57 @@
             });
         }
 
+        // Employee management
+        function addNewEmployee() {
+            const name = document.getElementById('new-employee-name').value.trim();
+            const code = document.getElementById('employee-code').value.trim();
+            const balanceInput = document.getElementById('initial-balance').value.trim();
+            
+            if (!name) {
+                showNotification('Por favor, digite um nome.', 'warning');
+                return;
+            }
+            
+            // Format employee name with code if provided
+            const employeeName = code ? `${code} - ${name}` : name;
+            
+            if (db.employees.includes(employeeName)) {
+                showNotification('Este funcionário já existe.', 'warning');
+                return;
+            }
+            
+            db.employees.push(employeeName);
+            db.entries[employeeName] = [];
+            
+            // Store employee details
+            db.employeeDetails[employeeName] = {
+                code: code,
+                fullName: name,
+                createdDate: new Date().toISOString()
+            };
+            
+            // Save initial balance if provided
+            if (balanceInput) {
+                const balanceMinutes = HHMMtoMinutes(balanceInput);
+                if (!isNaN(balanceMinutes)) {
+                    db.initialBalances[employeeName] = balanceMinutes;
+                    showNotification(`Saldo inicial de ${minutesToHHMM(balanceMinutes)} configurado.`, 'success');
+                }
+            }
+            
+            saveData();
+            
+            updateEmployeeList();
+            selectEmployee(employeeName);
+            closeModal('add-employee-modal');
+            
+            document.getElementById('new-employee-name').value = '';
+            document.getElementById('employee-code').value = '';
+            document.getElementById('initial-balance').value = '';
+        }
+
+        // Resto das funções permanecem as mesmas...
+
         // History management
         function refreshHistory() {
             const historyContent = document.getElementById('history-content');
@@ -1971,7 +2867,9 @@
                 totalBalance > 0 ? 'Saldo positivo' : totalBalance < 0 ? 'Saldo negativo' : 'Em equilíbrio';
         }
 
-        // Entry management
+        // Entry management functions (editEntry, saveEditedEntry, deleteCurrentEntry, deleteEntry)
+        // ... (essas funções permanecem as mesmas do código anterior)
+
         function editEntry(entryId) {
             const entry = db.entries[currentEmployee].find(e => e.id === entryId);
             if (!entry) return;
@@ -2081,43 +2979,6 @@
             }
         }
 
-        // Employee management
-        function addNewEmployee() {
-            const name = document.getElementById('new-employee-name').value.trim();
-            const balanceInput = document.getElementById('initial-balance').value.trim();
-            
-            if (!name) {
-                showNotification('Por favor, digite um nome.', 'warning');
-                return;
-            }
-            
-            if (db.employees.includes(name)) {
-                showNotification('Este funcionário já existe.', 'warning');
-                return;
-            }
-            
-            db.employees.push(name);
-            db.entries[name] = [];
-            
-            // Save initial balance if provided
-            if (balanceInput) {
-                const balanceMinutes = HHMMtoMinutes(balanceInput);
-                if (!isNaN(balanceMinutes)) {
-                    db.initialBalances[name] = balanceMinutes;
-                    showNotification(`Saldo inicial de ${minutesToHHMM(balanceMinutes)} configurado.`, 'success');
-                }
-            }
-            
-            saveData();
-            
-            updateEmployeeList();
-            selectEmployee(name);
-            closeModal('add-employee-modal');
-            
-            document.getElementById('new-employee-name').value = '';
-            document.getElementById('initial-balance').value = '';
-        }
-
         function saveInitialBalance() {
             const employee = document.getElementById('balance-employee-select').value;
             const balanceInput = document.getElementById('initial-balance-input').value.trim();
@@ -2198,7 +3059,12 @@
             // Employee info
             doc.setFontSize(12);
             doc.setTextColor(0, 0, 0);
-            doc.text(`Funcionário: ${currentEmployee}`, 20, 60);
+            
+            // Get employee code if available
+            const employeeCode = db.employeeDetails[currentEmployee]?.code || '';
+            const displayName = employeeCode ? `${employeeCode} - ${currentEmployee}` : currentEmployee;
+            
+            doc.text(`Funcionário: ${displayName}`, 20, 60);
             doc.text(`Data de geração: ${new Date().toLocaleDateString('pt-BR')}`, 20, 70);
             
             // Statistics
@@ -2243,7 +3109,7 @@
             }
             
             // Save PDF
-            const fileName = `relatorio_${currentEmployee}_${new Date().toISOString().split('T')[0]}.pdf`;
+            const fileName = `relatorio_${currentEmployee.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
             doc.save(fileName);
             
             showNotification('PDF exportado com sucesso!', 'success');
