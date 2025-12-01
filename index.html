@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Horas Extras Pro</title>
+    <title>Gestor de Horas Extras Pro - Modal Edition</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -616,7 +616,7 @@
             background: var(--card-bg);
             border-radius: var(--radius-lg);
             padding: 32px;
-            max-width: 500px;
+            max-width: 600px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
@@ -720,6 +720,61 @@
 
         input:checked + .toggle-slider:before {
             transform: translateX(30px);
+        }
+
+        /* Botão de Ação Principal */
+        .action-button-container {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(156, 39, 176, 0.05), rgba(240, 98, 146, 0.05));
+            border-radius: var(--radius-md);
+            border: 2px dashed var(--primary-light);
+        }
+
+        .action-button {
+            padding: 18px 40px;
+            font-size: 16px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 6px 20px rgba(156, 39, 176, 0.3);
+        }
+
+        .action-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(156, 39, 176, 0.4);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state-title {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .empty-state-text {
+            margin-bottom: 30px;
         }
 
         /* Responsive */
@@ -849,6 +904,62 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* Preview de Lançamento */
+        .entry-preview {
+            background: linear-gradient(135deg, rgba(156, 39, 176, 0.05), rgba(240, 98, 146, 0.05));
+            padding: 20px;
+            border-radius: var(--radius-sm);
+            margin-top: 20px;
+            border: 1px solid var(--primary-light);
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .preview-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .preview-label {
+            font-size: 12px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .preview-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .preview-result {
+            text-align: center;
+            padding: 15px;
+            background: var(--card-bg);
+            border-radius: var(--radius-sm);
+            border: 2px solid var(--border-color);
+            font-weight: 600;
+        }
+
+        .preview-result.positive {
+            color: var(--success-color);
+            border-color: var(--success-color);
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05));
+        }
+
+        .preview-result.negative {
+            color: var(--danger-color);
+            border-color: var(--danger-color);
+            background: linear-gradient(135deg, rgba(244, 67, 54, 0.1), rgba(244, 67, 54, 0.05));
+        }
     </style>
 </head>
 <body>
@@ -869,10 +980,13 @@
 
             <div class="nav-section">
                 <div class="section-title">Ações Rápidas</div>
-                <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="openAddEmployeeModal()">
+                <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="openModal('add-employee-modal')">
                     👤 Novo Funcionário
                 </button>
-                <button class="btn btn-accent" style="width: 100%;" onclick="openInitialBalanceModal()">
+                <button class="btn btn-accent" style="width: 100%; margin-bottom: 10px;" onclick="openModal('time-entry-modal')">
+                    ⏰ Lançar Horários
+                </button>
+                <button class="btn btn-info" style="width: 100%;" onclick="openModal('initial-balance-modal')">
                     💰 Saldo Inicial
                 </button>
             </div>
@@ -905,10 +1019,10 @@
                 <h1>Gestão de Horas Extras</h1>
                 <div class="header-actions">
                     <div class="balance-indicator" id="balance-indicator">
-                        <span>Saldo Inicial: </span>
+                        <span>Saldo Atual: </span>
                         <span id="initial-balance-display">00:00</span>
                     </div>
-                    <button class="btn btn-icon btn-info" onclick="openSettingsModal()" title="Configurações">
+                    <button class="btn btn-icon btn-info" onclick="openModal('settings-modal')" title="Configurações">
                         ⚙️
                     </button>
                     <button class="btn btn-primary" onclick="exportToPDF()">
@@ -960,46 +1074,14 @@
                 </div>
             </div>
 
-            <!-- Time Entry Card -->
-            <div class="card fade-in">
-                <div class="card-header">
-                    <div class="card-title">Lançar Horários</div>
-                    <div style="color: var(--text-secondary); font-size: 14px;" id="selected-employee-name">
-                        Selecione um funcionário
-                    </div>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label">Data</label>
-                        <input type="date" id="entry-date" class="form-control" value="">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Entrada</label>
-                        <input type="time" id="entry-time" class="form-control" value="09:00">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Saída Almoço</label>
-                        <input type="time" id="lunch-out-time" class="form-control" value="12:00">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Retorno Almoço</label>
-                        <input type="time" id="lunch-in-time" class="form-control" value="13:00">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Saída</label>
-                        <input type="time" id="exit-time" class="form-control" value="18:00">
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn btn-primary" style="flex: 1;" onclick="calculateAndLog()">
-                        📝 Lançar Horários
-                    </button>
-                    <button class="btn btn-danger" onclick="clearForm()">
-                        🗑️ Limpar
-                    </button>
-                </div>
+            <!-- Botão de Ação Principal -->
+            <div class="action-button-container">
+                <button class="action-button" onclick="openModal('time-entry-modal')">
+                    ⏰ Lançar Novos Horários
+                </button>
+                <p style="margin-top: 15px; color: var(--text-light); font-size: 14px;">
+                    Clique para adicionar novos horários para o funcionário selecionado
+                </p>
             </div>
 
             <!-- History Table -->
@@ -1008,38 +1090,25 @@
                     <div class="card-title">Histórico de Lançamentos</div>
                     <div style="color: var(--text-secondary); font-size: 14px;">
                         <span id="history-count">0</span> registros
+                        <button class="btn btn-icon badge-primary" style="margin-left: 10px;" onclick="refreshHistory()" title="Atualizar">
+                            🔄
+                        </button>
                     </div>
                 </div>
 
-                <div class="table-container">
-                    <table class="table" id="entry-log">
-                        <thead>
-                            <tr>
-                                <th>Data</th>
-                                <th>Entrada</th>
-                                <th>Almoço</th>
-                                <th>Retorno</th>
-                                <th>Saída</th>
-                                <th>Total</th>
-                                <th>Extras</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="entry-log-body">
-                            <!-- Entries will be populated here -->
-                        </tbody>
-                    </table>
+                <div id="history-content">
+                    <!-- Conteúdo será preenchido dinamicamente -->
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Modals -->
+    <!-- Modal de Cadastro de Funcionário -->
     <div class="modal" id="add-employee-modal">
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title">Novo Funcionário</div>
-                <button class="modal-close" onclick="closeAddEmployeeModal()">×</button>
+                <button class="modal-close" onclick="closeModal('add-employee-modal')">×</button>
             </div>
             <div class="form-group">
                 <label class="form-label">Nome do Funcionário</label>
@@ -1058,11 +1127,85 @@
         </div>
     </div>
 
+    <!-- Modal de Lançamento de Horários -->
+    <div class="modal" id="time-entry-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Lançar Horários</div>
+                <button class="modal-close" onclick="closeModal('time-entry-modal')">×</button>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Funcionário</label>
+                <select id="modal-employee-select" class="form-control">
+                    <!-- Options will be populated -->
+                </select>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Data</label>
+                    <input type="date" id="modal-entry-date" class="form-control" value="">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Entrada</label>
+                    <input type="time" id="modal-entry-time" class="form-control" value="09:00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Saída Almoço</label>
+                    <input type="time" id="modal-lunch-out-time" class="form-control" value="12:00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Retorno Almoço</label>
+                    <input type="time" id="modal-lunch-in-time" class="form-control" value="13:00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Saída</label>
+                    <input type="time" id="modal-exit-time" class="form-control" value="18:00">
+                </div>
+            </div>
+
+            <!-- Preview do Cálculo -->
+            <div class="entry-preview" id="entry-preview" style="display: none;">
+                <div class="preview-grid">
+                    <div class="preview-item">
+                        <div class="preview-label">Jornada Total</div>
+                        <div class="preview-value" id="preview-total">00:00</div>
+                    </div>
+                    <div class="preview-item">
+                        <div class="preview-label">Horas Normais</div>
+                        <div class="preview-value" id="preview-normal">08:00</div>
+                    </div>
+                    <div class="preview-item">
+                        <div class="preview-label">Horas Extras</div>
+                        <div class="preview-value" id="preview-overtime">00:00</div>
+                    </div>
+                </div>
+                <div class="preview-result" id="preview-result">
+                    Resultado: <span id="preview-result-text">00:00</span>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-primary" style="flex: 1;" onclick="calculateAndSaveEntry()">
+                    📝 Salvar Lançamento
+                </button>
+                <button class="btn btn-info" onclick="previewCalculation()">
+                    👁️ Pré-visualizar
+                </button>
+                <button class="btn btn-danger" onclick="closeModal('time-entry-modal')">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Saldo Inicial -->
     <div class="modal" id="initial-balance-modal">
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title">Configurar Saldo Inicial de Horas Extras</div>
-                <button class="modal-close" onclick="closeInitialBalanceModal()">×</button>
+                <button class="modal-close" onclick="closeModal('initial-balance-modal')">×</button>
             </div>
             <div class="form-group">
                 <label class="form-label">Funcionário</label>
@@ -1087,18 +1230,82 @@
         </div>
     </div>
 
+    <!-- Modal de Configurações -->
     <div class="modal" id="settings-modal">
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title">Configurações</div>
-                <button class="modal-close" onclick="closeSettingsModal()">×</button>
+                <button class="modal-close" onclick="closeModal('settings-modal')">×</button>
             </div>
             <div class="form-group">
+                <label class="form-label">Horário Padrão de Trabalho</label>
+                <input type="time" id="standard-start" class="form-control" value="09:00">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Horário Padrão de Saída</label>
+                <input type="time" id="standard-end" class="form-control" value="18:00">
+            </div>
+            <div class="form-group">
+                <button class="btn btn-success" style="width: 100%; margin-bottom: 10px;" onclick="saveSettings()">
+                    💾 Salvar Configurações
+                </button>
                 <button class="btn btn-warning" style="width: 100%; margin-bottom: 10px;" onclick="exportBackup()">
                     📤 Exportar Backup
                 </button>
                 <button class="btn btn-danger" style="width: 100%;" onclick="clearSystem()">
                     🗑️ Limpar Todos os Dados
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Edição de Lançamento -->
+    <div class="modal" id="edit-entry-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Editar Lançamento</div>
+                <button class="modal-close" onclick="closeModal('edit-entry-modal')">×</button>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Funcionário</label>
+                <select id="edit-employee-select" class="form-control">
+                    <!-- Options will be populated -->
+                </select>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Data</label>
+                    <input type="date" id="edit-entry-date" class="form-control" value="">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Entrada</label>
+                    <input type="time" id="edit-entry-time" class="form-control" value="09:00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Saída Almoço</label>
+                    <input type="time" id="edit-lunch-out-time" class="form-control" value="12:00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Retorno Almoço</label>
+                    <input type="time" id="edit-lunch-in-time" class="form-control" value="13:00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Saída</label>
+                    <input type="time" id="edit-exit-time" class="form-control" value="18:00">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-primary" style="flex: 1;" onclick="saveEditedEntry()">
+                    💾 Salvar Alterações
+                </button>
+                <button class="btn btn-danger" onclick="deleteCurrentEntry()">
+                    🗑️ Excluir Lançamento
+                </button>
+                <button class="btn btn-info" onclick="closeModal('edit-entry-modal')">
+                    Cancelar
                 </button>
             </div>
         </div>
@@ -1122,23 +1329,14 @@
         };
 
         let currentEmployee = null;
-        let editingEntryId = null;
+        let currentEditingEntryId = null;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             loadData();
             initEventListeners();
-            setCurrentDate();
             updateUI();
         });
-
-        function setCurrentDate() {
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            document.getElementById('entry-date').value = `${yyyy}-${mm}-${dd}`;
-        }
 
         function initEventListeners() {
             // Dark mode toggle
@@ -1155,6 +1353,116 @@
                     }
                 });
             });
+
+            // Auto update preview when inputs change
+            const modalInputs = [
+                'modal-entry-date', 'modal-entry-time', 'modal-lunch-out-time',
+                'modal-lunch-in-time', 'modal-exit-time'
+            ];
+            modalInputs.forEach(id => {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.addEventListener('change', previewCalculation);
+                }
+            });
+        }
+
+        // Modal Management
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+
+            // Modal-specific initialization
+            switch(modalId) {
+                case 'add-employee-modal':
+                    document.getElementById('new-employee-name').value = '';
+                    document.getElementById('initial-balance').value = '';
+                    break;
+                    
+                case 'time-entry-modal':
+                    if (!currentEmployee) {
+                        showNotification('Por favor, selecione um funcionário primeiro.', 'warning');
+                        return;
+                    }
+                    initTimeEntryModal();
+                    break;
+                    
+                case 'initial-balance-modal':
+                    initBalanceModal();
+                    break;
+                    
+                case 'settings-modal':
+                    initSettingsModal();
+                    break;
+            }
+            
+            modal.classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            currentEditingEntryId = null;
+        }
+
+        function initTimeEntryModal() {
+            const employeeSelect = document.getElementById('modal-employee-select');
+            employeeSelect.innerHTML = '';
+            
+            db.employees.forEach(employee => {
+                const option = document.createElement('option');
+                option.value = employee;
+                option.textContent = employee;
+                if (employee === currentEmployee) {
+                    option.selected = true;
+                }
+                option.dataset.balance = calculateTotalBalance(employee);
+                employeeSelect.appendChild(option);
+            });
+            
+            // Set current date
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            document.getElementById('modal-entry-date').value = `${yyyy}-${mm}-${dd}`;
+            
+            // Set default times
+            document.getElementById('modal-entry-time').value = db.settings.standardStart;
+            document.getElementById('modal-lunch-out-time').value = db.settings.standardLunchOut;
+            document.getElementById('modal-lunch-in-time').value = db.settings.standardLunchIn;
+            document.getElementById('modal-exit-time').value = db.settings.standardEnd;
+            
+            // Hide preview
+            document.getElementById('entry-preview').style.display = 'none';
+        }
+
+        function initBalanceModal() {
+            const select = document.getElementById('balance-employee-select');
+            select.innerHTML = '';
+            
+            db.employees.forEach(employee => {
+                const option = document.createElement('option');
+                option.value = employee;
+                option.textContent = employee;
+                if (employee === currentEmployee) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+            
+            // Set current balance
+            const currentBalance = db.initialBalances[currentEmployee] || 0;
+            document.getElementById('initial-balance-input').value = 
+                currentBalance > 0 ? `+${minutesToHHMM(currentBalance)}` : 
+                currentBalance < 0 ? `${minutesToHHMM(currentBalance)}` : '';
+            
+            // Clear description
+            document.getElementById('balance-description').value = '';
+        }
+
+        function initSettingsModal() {
+            document.getElementById('standard-start').value = db.settings.standardStart;
+            document.getElementById('standard-end').value = db.settings.standardEnd;
         }
 
         function loadData() {
@@ -1182,6 +1490,20 @@
         function updateEmployeeList() {
             const employeeList = document.getElementById('employee-list');
             employeeList.innerHTML = '';
+            
+            if (db.employees.length === 0) {
+                employeeList.innerHTML = `
+                    <div class="empty-state" style="padding: 20px;">
+                        <div class="empty-state-icon">👥</div>
+                        <div class="empty-state-title">Nenhum funcionário</div>
+                        <div class="empty-state-text">Adicione seu primeiro funcionário</div>
+                        <button class="btn btn-primary" onclick="openModal('add-employee-modal')">
+                            👤 Adicionar Funcionário
+                        </button>
+                    </div>
+                `;
+                return;
+            }
             
             db.employees.forEach(employee => {
                 const li = document.createElement('li');
@@ -1216,59 +1538,10 @@
         function selectEmployee(employeeName) {
             currentEmployee = employeeName;
             updateEmployeeList();
-            updateSelectedEmployeeDisplay();
-            updateEntryHistory();
             updateStatistics();
             updateInitialBalanceDisplay();
             updateBalanceSummary();
-        }
-
-        function updateSelectedEmployeeDisplay() {
-            document.getElementById('selected-employee-name').textContent = currentEmployee || 'Selecione um funcionário';
-        }
-
-        function updateInitialBalanceDisplay() {
-            if (!currentEmployee) return;
-            
-            const initialBalance = getInitialBalance(currentEmployee);
-            const balanceElement = document.getElementById('initial-balance-display');
-            const indicator = document.getElementById('balance-indicator');
-            
-            balanceElement.textContent = minutesToHHMM(initialBalance);
-            
-            if (initialBalance > 0) {
-                balanceElement.className = 'balance-positive';
-                indicator.classList.add('balance-positive');
-                indicator.classList.remove('balance-negative');
-            } else if (initialBalance < 0) {
-                balanceElement.className = 'balance-negative';
-                indicator.classList.add('balance-negative');
-                indicator.classList.remove('balance-positive');
-            } else {
-                balanceElement.className = '';
-                indicator.classList.remove('balance-positive', 'balance-negative');
-            }
-        }
-
-        function updateBalanceSummary() {
-            if (!currentEmployee) return;
-            
-            const initialBalance = getInitialBalance(currentEmployee);
-            const currentMonthOvertime = calculateCurrentMonthOvertime(currentEmployee);
-            const totalBalance = initialBalance + currentMonthOvertime;
-            
-            // Update summary display
-            document.getElementById('initial-balance-summary').textContent = minutesToHHMM(initialBalance);
-            document.getElementById('monthly-overtime-summary').textContent = minutesToHHMM(currentMonthOvertime);
-            document.getElementById('total-balance-summary').textContent = minutesToHHMM(totalBalance);
-            
-            // Apply colors
-            document.getElementById('initial-balance-summary').className = 
-                `balance-value ${initialBalance > 0 ? 'positive' : initialBalance < 0 ? 'negative' : ''}`;
-            document.getElementById('monthly-overtime-summary').className = 
-                `balance-value ${currentMonthOvertime > 0 ? 'positive' : currentMonthOvertime < 0 ? 'negative' : ''}`;
-            document.getElementById('total-balance-summary').className = 
-                `balance-value ${totalBalance > 0 ? 'positive' : totalBalance < 0 ? 'negative' : ''}`;
+            refreshHistory();
         }
 
         // Time calculations
@@ -1343,20 +1616,55 @@
             return initialBalance + currentMonthOvertime; // SOMA dos dois
         }
 
-        // Main calculation function
-        function calculateAndLog() {
-            if (!currentEmployee) {
-                showNotification('Por favor, selecione um funcionário primeiro.', 'warning');
+        // Preview calculation
+        function previewCalculation() {
+            const entry = {
+                entry: document.getElementById('modal-entry-time').value,
+                lunchOut: document.getElementById('modal-lunch-out-time').value,
+                lunchIn: document.getElementById('modal-lunch-in-time').value,
+                exit: document.getElementById('modal-exit-time').value
+            };
+            
+            if (!entry.entry || !entry.lunchOut || !entry.lunchIn || !entry.exit) {
                 return;
             }
             
-            const date = document.getElementById('entry-date').value;
-            const entry = document.getElementById('entry-time').value;
-            const lunchOut = document.getElementById('lunch-out-time').value;
-            const lunchIn = document.getElementById('lunch-in-time').value;
-            const exit = document.getElementById('exit-time').value;
+            const overtimeMinutes = calculateDailyOvertime(entry);
+            const totalWorkedMinutes = overtimeMinutes + (8 * 60);
             
-            if (!date || !entry || !lunchOut || !lunchIn || !exit) {
+            // Update preview
+            document.getElementById('preview-total').textContent = minutesToHHMM(totalWorkedMinutes);
+            document.getElementById('preview-overtime').textContent = 
+                overtimeMinutes > 0 ? `+${minutesToHHMM(overtimeMinutes)}` : minutesToHHMM(overtimeMinutes);
+            
+            const previewResult = document.getElementById('preview-result');
+            const resultText = document.getElementById('preview-result-text');
+            
+            resultText.textContent = overtimeMinutes > 0 ? `+${minutesToHHMM(overtimeMinutes)} extras` : 
+                                   overtimeMinutes < 0 ? `${minutesToHHMM(overtimeMinutes)} extras` : 'Horas normais';
+            
+            if (overtimeMinutes > 0) {
+                previewResult.className = 'preview-result positive';
+            } else if (overtimeMinutes < 0) {
+                previewResult.className = 'preview-result negative';
+            } else {
+                previewResult.className = 'preview-result';
+            }
+            
+            // Show preview
+            document.getElementById('entry-preview').style.display = 'block';
+        }
+
+        // Save time entry
+        function calculateAndSaveEntry() {
+            const employee = document.getElementById('modal-employee-select').value;
+            const date = document.getElementById('modal-entry-date').value;
+            const entry = document.getElementById('modal-entry-time').value;
+            const lunchOut = document.getElementById('modal-lunch-out-time').value;
+            const lunchIn = document.getElementById('modal-lunch-in-time').value;
+            const exit = document.getElementById('modal-exit-time').value;
+            
+            if (!employee || !date || !entry || !lunchOut || !lunchIn || !exit) {
                 showNotification('Por favor, preencha todos os campos.', 'warning');
                 return;
             }
@@ -1365,7 +1673,7 @@
             const totalWorkedMinutes = overtimeMinutes + (8 * 60);
             
             const newEntry = {
-                id: editingEntryId || Date.now().toString(),
+                id: Date.now().toString(),
                 date,
                 entry,
                 lunchOut,
@@ -1375,51 +1683,52 @@
                 overtimeMinutes
             };
             
-            if (!db.entries[currentEmployee]) {
-                db.entries[currentEmployee] = [];
+            if (!db.entries[employee]) {
+                db.entries[employee] = [];
             }
             
-            if (editingEntryId) {
-                // Update existing entry
-                const index = db.entries[currentEmployee].findIndex(e => e.id === editingEntryId);
-                if (index > -1) {
-                    db.entries[currentEmployee][index] = newEntry;
+            // Check for duplicate date
+            const existingIndex = db.entries[employee].findIndex(e => e.date === date);
+            if (existingIndex > -1) {
+                if (confirm('Já existe um lançamento para esta data. Deseja substituir?')) {
+                    db.entries[employee][existingIndex] = newEntry;
+                } else {
+                    return;
                 }
-                editingEntryId = null;
             } else {
-                // Add new entry
-                db.entries[currentEmployee].push(newEntry);
+                db.entries[employee].push(newEntry);
             }
             
             // Sort entries by date
-            db.entries[currentEmployee].sort((a, b) => new Date(a.date) - new Date(b.date));
+            db.entries[employee].sort((a, b) => new Date(a.date) - new Date(b.date));
             
             saveData();
-            updateEntryHistory();
-            updateStatistics();
-            updateBalanceSummary();
             
-            // Reset form
-            clearForm();
+            if (employee === currentEmployee) {
+                updateStatistics();
+                updateBalanceSummary();
+                refreshHistory();
+            }
             
-            // Show success message
+            closeModal('time-entry-modal');
             showNotification('Horários lançados com sucesso!', 'success');
         }
 
-        function clearForm() {
-            document.getElementById('entry-time').value = '09:00';
-            document.getElementById('lunch-out-time').value = '12:00';
-            document.getElementById('lunch-in-time').value = '13:00';
-            document.getElementById('exit-time').value = '18:00';
-            setCurrentDate();
-            editingEntryId = null;
-        }
-
-        function updateEntryHistory() {
-            const tbody = document.getElementById('entry-log-body');
-            tbody.innerHTML = '';
+        // History management
+        function refreshHistory() {
+            const historyContent = document.getElementById('history-content');
             
-            if (!currentEmployee || !db.entries[currentEmployee]) {
+            if (!currentEmployee || !db.entries[currentEmployee] || db.entries[currentEmployee].length === 0) {
+                historyContent.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📅</div>
+                        <div class="empty-state-title">Nenhum lançamento</div>
+                        <div class="empty-state-text">Comece lançando horários para este funcionário</div>
+                        <button class="btn btn-primary" onclick="openModal('time-entry-modal')">
+                            ⏰ Lançar Horários
+                        </button>
+                    </div>
+                `;
                 document.getElementById('history-count').textContent = '0';
                 return;
             }
@@ -1427,9 +1736,26 @@
             const entries = db.entries[currentEmployee];
             document.getElementById('history-count').textContent = entries.length;
             
+            // Create table
+            let tableHTML = `
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Entrada</th>
+                                <th>Almoço</th>
+                                <th>Retorno</th>
+                                <th>Saída</th>
+                                <th>Total</th>
+                                <th>Extras</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
             entries.forEach(entry => {
-                const tr = document.createElement('tr');
-                
                 const [y, m, d] = entry.date.split('-');
                 const formattedDate = `${d}/${m}/${y}`;
                 
@@ -1438,22 +1764,30 @@
                 
                 const overtimePrefix = entry.overtimeMinutes > 0 ? '+' : '';
                 
-                tr.innerHTML = `
-                    <td>${formattedDate}</td>
-                    <td>${entry.entry}</td>
-                    <td>${entry.lunchOut}</td>
-                    <td>${entry.lunchIn}</td>
-                    <td>${entry.exit}</td>
-                    <td>${minutesToHHMM(entry.totalWorkedMinutes)}</td>
-                    <td><span class="badge ${overtimeClass}">${overtimePrefix}${minutesToHHMM(entry.overtimeMinutes)}</span></td>
-                    <td>
-                        <button class="btn btn-icon badge-primary" onclick="editEntry('${entry.id}')" title="Editar">✏️</button>
-                        <button class="btn btn-icon badge-danger" onclick="deleteEntry('${entry.id}')" title="Excluir">🗑️</button>
-                    </td>
+                tableHTML += `
+                    <tr>
+                        <td>${formattedDate}</td>
+                        <td>${entry.entry}</td>
+                        <td>${entry.lunchOut}</td>
+                        <td>${entry.lunchIn}</td>
+                        <td>${entry.exit}</td>
+                        <td>${minutesToHHMM(entry.totalWorkedMinutes)}</td>
+                        <td><span class="badge ${overtimeClass}">${overtimePrefix}${minutesToHHMM(entry.overtimeMinutes)}</span></td>
+                        <td>
+                            <button class="btn btn-icon badge-primary" onclick="editEntry('${entry.id}')" title="Editar">✏️</button>
+                            <button class="btn btn-icon badge-danger" onclick="deleteEntry('${entry.id}')" title="Excluir">🗑️</button>
+                        </td>
+                    </tr>
                 `;
-                
-                tbody.appendChild(tr);
             });
+            
+            tableHTML += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            historyContent.innerHTML = tableHTML;
         }
 
         function updateStatistics() {
@@ -1490,6 +1824,51 @@
             updateInitialBalanceDisplay();
         }
 
+        function updateInitialBalanceDisplay() {
+            if (!currentEmployee) return;
+            
+            const initialBalance = getInitialBalance(currentEmployee);
+            const totalBalance = calculateTotalBalance(currentEmployee);
+            const balanceElement = document.getElementById('initial-balance-display');
+            const indicator = document.getElementById('balance-indicator');
+            
+            balanceElement.textContent = minutesToHHMM(totalBalance);
+            
+            if (totalBalance > 0) {
+                balanceElement.className = 'balance-positive';
+                indicator.classList.add('balance-positive');
+                indicator.classList.remove('balance-negative');
+            } else if (totalBalance < 0) {
+                balanceElement.className = 'balance-negative';
+                indicator.classList.add('balance-negative');
+                indicator.classList.remove('balance-positive');
+            } else {
+                balanceElement.className = '';
+                indicator.classList.remove('balance-positive', 'balance-negative');
+            }
+        }
+
+        function updateBalanceSummary() {
+            if (!currentEmployee) return;
+            
+            const initialBalance = getInitialBalance(currentEmployee);
+            const currentMonthOvertime = calculateCurrentMonthOvertime(currentEmployee);
+            const totalBalance = initialBalance + currentMonthOvertime;
+            
+            // Update summary display
+            document.getElementById('initial-balance-summary').textContent = minutesToHHMM(initialBalance);
+            document.getElementById('monthly-overtime-summary').textContent = minutesToHHMM(currentMonthOvertime);
+            document.getElementById('total-balance-summary').textContent = minutesToHHMM(totalBalance);
+            
+            // Apply colors
+            document.getElementById('initial-balance-summary').className = 
+                `balance-value ${initialBalance > 0 ? 'positive' : initialBalance < 0 ? 'negative' : ''}`;
+            document.getElementById('monthly-overtime-summary').className = 
+                `balance-value ${currentMonthOvertime > 0 ? 'positive' : currentMonthOvertime < 0 ? 'negative' : ''}`;
+            document.getElementById('total-balance-summary').className = 
+                `balance-value ${totalBalance > 0 ? 'positive' : totalBalance < 0 ? 'negative' : ''}`;
+        }
+
         function updateChangeIndicators(totalBalance, initialBalance, currentOvertime) {
             const balanceChange = currentOvertime; // Apenas o que foi gerado no mês
             const balanceEl = document.getElementById('balance-change');
@@ -1521,44 +1900,119 @@
         // Entry management
         function editEntry(entryId) {
             const entry = db.entries[currentEmployee].find(e => e.id === entryId);
-            if (entry) {
-                editingEntryId = entryId;
-                document.getElementById('entry-date').value = entry.date;
-                document.getElementById('entry-time').value = entry.entry;
-                document.getElementById('lunch-out-time').value = entry.lunchOut;
-                document.getElementById('lunch-in-time').value = entry.lunchIn;
-                document.getElementById('exit-time').value = entry.exit;
-                
-                // Scroll to form
-                document.querySelector('.main-content').scrollTo({
-                    top: 0,
-                    behavior: 'smooth'
-                });
-                
-                showNotification('Editando lançamento...', 'info');
+            if (!entry) return;
+            
+            currentEditingEntryId = entryId;
+            
+            // Populate edit modal
+            const employeeSelect = document.getElementById('edit-employee-select');
+            employeeSelect.innerHTML = '';
+            
+            db.employees.forEach(employee => {
+                const option = document.createElement('option');
+                option.value = employee;
+                option.textContent = employee;
+                if (employee === currentEmployee) {
+                    option.selected = true;
+                }
+                employeeSelect.appendChild(option);
+            });
+            
+            document.getElementById('edit-entry-date').value = entry.date;
+            document.getElementById('edit-entry-time').value = entry.entry;
+            document.getElementById('edit-lunch-out-time').value = entry.lunchOut;
+            document.getElementById('edit-lunch-in-time').value = entry.lunchIn;
+            document.getElementById('edit-exit-time').value = entry.exit;
+            
+            openModal('edit-entry-modal');
+        }
+
+        function saveEditedEntry() {
+            if (!currentEditingEntryId) return;
+            
+            const employee = document.getElementById('edit-employee-select').value;
+            const date = document.getElementById('edit-entry-date').value;
+            const entry = document.getElementById('edit-entry-time').value;
+            const lunchOut = document.getElementById('edit-lunch-out-time').value;
+            const lunchIn = document.getElementById('edit-lunch-in-time').value;
+            const exit = document.getElementById('edit-exit-time').value;
+            
+            if (!employee || !date || !entry || !lunchOut || !lunchIn || !exit) {
+                showNotification('Por favor, preencha todos os campos.', 'warning');
+                return;
             }
+            
+            const overtimeMinutes = calculateDailyOvertime({ date, entry, lunchOut, lunchIn, exit });
+            const totalWorkedMinutes = overtimeMinutes + (8 * 60);
+            
+            const updatedEntry = {
+                id: currentEditingEntryId,
+                date,
+                entry,
+                lunchOut,
+                lunchIn,
+                exit,
+                totalWorkedMinutes,
+                overtimeMinutes
+            };
+            
+            // Find and update entry
+            const entries = db.entries[employee] || [];
+            const entryIndex = entries.findIndex(e => e.id === currentEditingEntryId);
+            
+            if (entryIndex > -1) {
+                entries[entryIndex] = updatedEntry;
+                db.entries[employee] = entries;
+                
+                // Sort entries by date
+                db.entries[employee].sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                saveData();
+                
+                if (employee === currentEmployee) {
+                    updateStatistics();
+                    updateBalanceSummary();
+                    refreshHistory();
+                }
+                
+                closeModal('edit-entry-modal');
+                showNotification('Lançamento atualizado com sucesso!', 'success');
+            }
+        }
+
+        function deleteCurrentEntry() {
+            if (!currentEditingEntryId || !confirm('Tem certeza que deseja excluir este lançamento?')) {
+                return;
+            }
+            
+            const employee = document.getElementById('edit-employee-select').value;
+            const entries = db.entries[employee] || [];
+            
+            db.entries[employee] = entries.filter(e => e.id !== currentEditingEntryId);
+            saveData();
+            
+            if (employee === currentEmployee) {
+                updateStatistics();
+                updateBalanceSummary();
+                refreshHistory();
+            }
+            
+            closeModal('edit-entry-modal');
+            showNotification('Lançamento excluído!', 'success');
         }
 
         function deleteEntry(entryId) {
             if (confirm('Tem certeza que deseja excluir este lançamento?')) {
                 db.entries[currentEmployee] = db.entries[currentEmployee].filter(e => e.id !== entryId);
                 saveData();
-                updateEntryHistory();
                 updateStatistics();
                 updateBalanceSummary();
+                refreshHistory();
                 showNotification('Lançamento excluído!', 'success');
             }
         }
 
-        // Modal functions
-        function openAddEmployeeModal() {
-            document.getElementById('add-employee-modal').classList.add('active');
-        }
-
-        function closeAddEmployeeModal() {
-            document.getElementById('add-employee-modal').classList.remove('active');
-        }
-
+        // Employee management
         function addNewEmployee() {
             const name = document.getElementById('new-employee-name').value.trim();
             const balanceInput = document.getElementById('initial-balance').value.trim();
@@ -1589,45 +2043,10 @@
             
             updateEmployeeList();
             selectEmployee(name);
-            closeAddEmployeeModal();
+            closeModal('add-employee-modal');
             
             document.getElementById('new-employee-name').value = '';
             document.getElementById('initial-balance').value = '';
-        }
-
-        function openInitialBalanceModal() {
-            if (!currentEmployee) {
-                showNotification('Selecione um funcionário primeiro.', 'warning');
-                return;
-            }
-            
-            const select = document.getElementById('balance-employee-select');
-            select.innerHTML = '';
-            
-            db.employees.forEach(employee => {
-                const option = document.createElement('option');
-                option.value = employee;
-                option.textContent = employee;
-                if (employee === currentEmployee) {
-                    option.selected = true;
-                }
-                select.appendChild(option);
-            });
-            
-            // Set current balance
-            const currentBalance = db.initialBalances[currentEmployee] || 0;
-            document.getElementById('initial-balance-input').value = 
-                currentBalance > 0 ? `+${minutesToHHMM(currentBalance)}` : 
-                currentBalance < 0 ? `${minutesToHHMM(currentBalance)}` : '';
-            
-            // Clear description
-            document.getElementById('balance-description').value = '';
-            
-            document.getElementById('initial-balance-modal').classList.add('active');
-        }
-
-        function closeInitialBalanceModal() {
-            document.getElementById('initial-balance-modal').classList.remove('active');
         }
 
         function saveInitialBalance() {
@@ -1672,18 +2091,18 @@
             }
             
             updateEmployeeList();
-            closeInitialBalanceModal();
+            closeModal('initial-balance-modal');
             
             const balanceDisplay = minutesToHHMM(balanceMinutes);
             showNotification(`Saldo inicial de ${balanceDisplay} salvo para ${employee}.`, 'success');
         }
 
-        function openSettingsModal() {
-            document.getElementById('settings-modal').classList.add('active');
-        }
-
-        function closeSettingsModal() {
-            document.getElementById('settings-modal').classList.remove('active');
+        function saveSettings() {
+            db.settings.standardStart = document.getElementById('standard-start').value;
+            db.settings.standardEnd = document.getElementById('standard-end').value;
+            saveData();
+            showNotification('Configurações salvas com sucesso!', 'success');
+            closeModal('settings-modal');
         }
 
         // Export functions
