@@ -2559,6 +2559,9 @@
             // Set analysis period
             document.getElementById('analysis-start-month').value = `${yyyy}-01`;
             document.getElementById('analysis-end-month').value = `${yyyy}-${mm}`;
+            
+            // Initialize workday settings form
+            updateWorkdaySettingsForm();
         });
 
         function initEventListeners() {
@@ -2852,16 +2855,25 @@
             document.getElementById('holiday-end').value = '00:00';
         }
 
-        // Funções de Dias Úteis e Feriados
+        // Funções de Dias Úteis e Feriados - CORRIGIDAS
         function updateWorkdaySettingsForm() {
             const monthYear = document.getElementById('workday-config-month').value;
+            if (!monthYear) return;
+            
             const [year, month] = monthYear.split('-').map(Number);
             
             const monthKey = `${year}-${String(month).padStart(2, '0')}`;
-            const workdays = db.monthlyWorkdays[monthKey] || calculateWorkdaysForMonth(year, month);
+            
+            // Obter dias úteis salvos ou calcular automaticamente
+            let workdays = db.monthlyWorkdays[monthKey];
+            if (workdays === undefined || workdays === null) {
+                workdays = calculateWorkdaysForMonth(year, month);
+                db.monthlyWorkdays[monthKey] = workdays;
+            }
             
             document.getElementById('working-days-input').value = workdays;
             
+            // Atualizar os valores dos campos de horários
             document.getElementById('weekday-start').value = db.workdaySettings.weekday.start;
             document.getElementById('weekday-end').value = db.workdaySettings.weekday.end;
             document.getElementById('weekday-lunch').value = db.workdaySettings.weekday.lunch;
@@ -2877,23 +2889,24 @@
 
         function calculateWorkdaysForMonth(year, month) {
             if (!db.workdaySettings.autoCalculateWorkdays) {
-                return 22;
+                return 22; // Valor padrão
             }
             
             let workdays = 0;
-            const lastDay = new Date(year, month, 0).getDate();
+            const lastDay = new Date(year, month, 0).getDate(); // Último dia do mês
             
             for (let day = 1; day <= lastDay; day++) {
                 const date = new Date(year, month - 1, day);
                 const dayOfWeek = date.getDay();
                 
+                // 0 = Domingo, 6 = Sábado
                 if (dayOfWeek === 0 || dayOfWeek === 6) {
-                    continue;
+                    continue; // Pular finais de semana
                 }
                 
                 const dateStr = date.toISOString().split('T')[0];
                 if (isHoliday(dateStr)) {
-                    continue;
+                    continue; // Pular feriados
                 }
                 
                 workdays++;
@@ -2919,8 +2932,9 @@
 
         function getDayType(dateStr) {
             const date = new Date(dateStr);
-            const dayOfWeek = date.getDay();
+            const dayOfWeek = date.getDay(); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
             
+            // Verificar se é feriado primeiro
             if (isHoliday(dateStr)) {
                 const year = date.getFullYear();
                 const holiday = db.holidays[year]?.find(h => h.date === dateStr);
@@ -2931,20 +2945,21 @@
                 };
             }
             
+            // Determinar tipo de dia baseado no dia da semana
             switch(dayOfWeek) {
-                case 0:
+                case 0: // Domingo
                     return {
                         type: 'sunday',
                         name: 'Domingo',
                         hours: db.workdaySettings.sunday.hours
                     };
-                case 6:
+                case 6: // Sábado
                     return {
                         type: 'saturday',
                         name: 'Sábado',
                         hours: db.workdaySettings.saturday.hours
                     };
-                default:
+                default: // Dias úteis (Segunda a Sexta)
                     return {
                         type: 'weekday',
                         name: 'Dia Útil',
@@ -2993,12 +3008,18 @@
 
         function saveWorkdaySettings() {
             const monthYear = document.getElementById('workday-config-month').value;
+            if (!monthYear) {
+                showNotification('Selecione um mês/ano de configuração.', 'warning');
+                return;
+            }
+            
             const [year, month] = monthYear.split('-').map(Number);
             const workdays = parseInt(document.getElementById('working-days-input').value) || 22;
             
             const monthKey = `${year}-${String(month).padStart(2, '0')}`;
             db.monthlyWorkdays[monthKey] = workdays;
             
+            // Atualizar configurações de horários
             db.workdaySettings.weekday = {
                 start: document.getElementById('weekday-start').value,
                 end: document.getElementById('weekday-end').value,
@@ -3032,6 +3053,9 @@
                 )
             };
             
+            // Salvar também a jornada diária padrão
+            db.workdaySettings.dailyHours = db.workdaySettings.weekday.hours;
+            
             saveData();
             updateWorkdayInfo();
             closeModal('workday-settings-modal');
@@ -3051,12 +3075,20 @@
             const month = today.getMonth() + 1;
             const monthKey = `${year}-${String(month).padStart(2, '0')}`;
             
-            const workdays = db.monthlyWorkdays[monthKey] || calculateWorkdaysForMonth(year, month);
+            // Obter dias úteis para o mês atual
+            let workdays = db.monthlyWorkdays[monthKey];
+            if (workdays === undefined || workdays === null) {
+                workdays = calculateWorkdaysForMonth(year, month);
+                db.monthlyWorkdays[monthKey] = workdays;
+            }
+            
             document.getElementById('working-days-count').textContent = workdays;
             
+            // Contar feriados
             const holidaysCount = db.holidays[year] ? db.holidays[year].length : 0;
             document.getElementById('holidays-count').textContent = holidaysCount;
             
+            // Contar atestados
             let certificatesCount = 0;
             if (db.medicalCertificates) {
                 Object.values(db.medicalCertificates).forEach(certs => {
@@ -3065,13 +3097,17 @@
             }
             document.getElementById('medical-certificates-count').textContent = certificatesCount;
             
-            const expectedHours = workdays * db.workdaySettings.dailyHours;
-            document.getElementById('expected-month-hours').textContent = `${expectedHours}:00`;
+            // Calcular horas esperadas
+            const expectedHours = workdays * db.workdaySettings.weekday.hours;
+            document.getElementById('expected-month-hours').textContent = `${Math.floor(expectedHours)}:${String(Math.round((expectedHours % 1) * 60)).padStart(2, '0')}`;
             
+            // Atualizar informações de configuração
             const configMonth = document.getElementById('workday-config-month').value;
-            const [configYear, configMonthNum] = configMonth.split('-');
-            const configWorkdays = db.monthlyWorkdays[`${configYear}-${configMonthNum}`] || calculateWorkdaysForMonth(configYear, configMonthNum);
-            document.getElementById('workdays-config').textContent = `${configWorkdays} dias`;
+            if (configMonth) {
+                const [configYear, configMonthNum] = configMonth.split('-');
+                const configWorkdays = db.monthlyWorkdays[`${configYear}-${configMonthNum}`] || calculateWorkdaysForMonth(configYear, configMonthNum);
+                document.getElementById('workdays-config').textContent = `${configWorkdays} dias`;
+            }
             
             if (holidaysCount > 0) {
                 document.getElementById('holidays-list').textContent = `${holidaysCount} feriados`;
@@ -3627,7 +3663,6 @@
             showNotification('Horários lançados com sucesso!', 'success');
         }
 
-        // NOVA FUNÇÃO: Salvar e sugerir próxima data
         function saveAndSuggestNext() {
             const employee = document.getElementById('modal-employee-select').value;
             const date = document.getElementById('modal-entry-date').value;
@@ -3878,8 +3913,9 @@
             const netBalance = calculateNetBalance(employee);
             const monthOvertime = calculateCurrentMonthOvertime(employee);
             
-            const positivePercent = positiveHours > 0 ? (positiveHours / (positiveHours + negativeHours)) * 100 : 0;
-            const negativePercent = negativeHours > 0 ? (negativeHours / (positiveHours + negativeHours)) * 100 : 0;
+            const totalHours = positiveHours + negativeHours;
+            const positivePercent = totalHours > 0 ? (positiveHours / totalHours) * 100 : 0;
+            const negativePercent = totalHours > 0 ? (negativeHours / totalHours) * 100 : 0;
             
             document.getElementById('current-balance').textContent = minutesToHHMM(totalBalance);
             document.getElementById('positive-balance-fill').style.width = `${positivePercent}%`;
@@ -3944,8 +3980,9 @@
             document.getElementById('net-balance-status').textContent = totalBalance >= 0 ? 'Positivo' : 'Negativo';
             document.getElementById('net-balance-status').className = totalBalance >= 0 ? 'breakdown-value positive' : 'breakdown-value negative';
             
-            const positivePercent = positiveHours > 0 ? (positiveHours / (positiveHours + negativeHours)) * 100 : 0;
-            const negativePercent = negativeHours > 0 ? (negativeHours / (positiveHours + negativeHours)) * 100 : 0;
+            const totalHours = positiveHours + negativeHours;
+            const positivePercent = totalHours > 0 ? (positiveHours / totalHours) * 100 : 0;
+            const negativePercent = totalHours > 0 ? (negativeHours / totalHours) * 100 : 0;
             
             document.getElementById('positive-bar-fill').style.width = `${positivePercent}%`;
             document.getElementById('negative-bar-fill').style.width = `${negativePercent}%`;
@@ -5160,7 +5197,7 @@
             window.addNewEmployee = addNewEmployee;
             window.saveInitialBalance = saveInitialBalance;
             window.calculateAndSaveEntry = calculateAndSaveEntry;
-            window.saveAndSuggestNext = saveAndSuggestNext; // NOVA FUNÇÃO EXPORTADA
+            window.saveAndSuggestNext = saveAndSuggestNext;
             window.previewCalculation = previewCalculation;
             window.editEntry = editEntry;
             window.saveEditedEntry = saveEditedEntry;
