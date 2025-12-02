@@ -1873,6 +1873,9 @@
                 <button class="btn btn-primary" style="flex: 1;" onclick="calculateAndSaveEntry()">
                     📝 Salvar Lançamento
                 </button>
+                <button class="btn btn-success" style="flex: 1;" onclick="saveAndSuggestNext()">
+                    ⏭️ Salvar e Próxima Data
+                </button>
                 <button class="btn btn-info" onclick="previewCalculation()">
                     👁️ Pré-visualizar
                 </button>
@@ -2685,6 +2688,7 @@
                 employeeSelect.appendChild(option);
             });
             
+            // Set initial date
             const today = new Date();
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -3621,6 +3625,105 @@
             
             closeModal('time-entry-modal');
             showNotification('Horários lançados com sucesso!', 'success');
+        }
+
+        // NOVA FUNÇÃO: Salvar e sugerir próxima data
+        function saveAndSuggestNext() {
+            const employee = document.getElementById('modal-employee-select').value;
+            const date = document.getElementById('modal-entry-date').value;
+            const entry = document.getElementById('modal-entry-time').value;
+            const lunchOut = document.getElementById('modal-lunch-out-time').value;
+            const lunchIn = document.getElementById('modal-lunch-in-time').value;
+            const exit = document.getElementById('modal-exit-time').value;
+            
+            if (!employee || !date || !entry || !lunchOut || !lunchIn || !exit) {
+                showNotification('Por favor, preencha todos os campos.', 'warning');
+                return;
+            }
+            
+            const dayType = getDayType(date);
+            const hasCertificate = isDateAffectedByCertificate(employee, date);
+            
+            const balanceMinutes = calculateDailyBalance({
+                date, entry, lunchOut, lunchIn, exit, employee
+            });
+            
+            const expectedHours = hasCertificate ? 0 : dayType.hours;
+            const totalWorkedMinutes = Math.abs(balanceMinutes) + (expectedHours * 60);
+            
+            const newEntry = {
+                id: Date.now().toString(),
+                date,
+                entry,
+                lunchOut,
+                lunchIn,
+                exit,
+                totalWorkedMinutes,
+                balanceMinutes,
+                dayType: dayType.type,
+                expectedHours: expectedHours,
+                hasCertificate: hasCertificate
+            };
+            
+            if (!db.entries[employee]) {
+                db.entries[employee] = [];
+            }
+            
+            const existingIndex = db.entries[employee].findIndex(e => e.date === date);
+            if (existingIndex > -1) {
+                if (confirm('Já existe um lançamento para esta data. Deseja substituir?')) {
+                    const oldBalance = db.entries[employee][existingIndex].balanceMinutes;
+                    updateBalanceForEntry(employee, -oldBalance);
+                    
+                    db.entries[employee][existingIndex] = newEntry;
+                } else {
+                    return;
+                }
+            } else {
+                db.entries[employee].push(newEntry);
+            }
+            
+            updateBalanceForEntry(employee, balanceMinutes);
+            
+            db.entries[employee].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            saveData();
+            
+            updateAllUIComponents(employee);
+            
+            // Calcular próxima data
+            const currentDate = new Date(date);
+            const nextDate = new Date(currentDate);
+            nextDate.setDate(currentDate.getDate() + 1);
+            
+            // Verificar se a próxima data já existe nos registros
+            const nextDateStr = nextDate.toISOString().split('T')[0];
+            const existingEntry = db.entries[employee]?.find(e => e.date === nextDateStr);
+            
+            // Definir a próxima data
+            document.getElementById('modal-entry-date').value = nextDateStr;
+            
+            // Se já existe lançamento para a próxima data, preencher os horários
+            if (existingEntry) {
+                document.getElementById('modal-entry-time').value = existingEntry.entry || '09:00';
+                document.getElementById('modal-lunch-out-time').value = existingEntry.lunchOut || '12:00';
+                document.getElementById('modal-lunch-in-time').value = existingEntry.lunchIn || '13:00';
+                document.getElementById('modal-exit-time').value = existingEntry.exit || '18:00';
+            } else {
+                // Usar horários padrão para a nova data
+                document.getElementById('modal-entry-time').value = db.settings.standardStart;
+                document.getElementById('modal-lunch-out-time').value = db.settings.standardLunchOut;
+                document.getElementById('modal-lunch-in-time').value = db.settings.standardLunchIn;
+                document.getElementById('modal-exit-time').value = db.settings.standardEnd;
+            }
+            
+            // Atualizar o indicador do tipo de dia
+            updateDayTypeIndicator();
+            
+            // Limpar preview
+            document.getElementById('entry-preview').style.display = 'none';
+            
+            showNotification('Lançamento salvo! Próxima data: ' + formatDate(nextDateStr), 'success');
         }
 
         function updateBalanceForEntry(employee, balanceMinutes) {
@@ -5057,6 +5160,7 @@
             window.addNewEmployee = addNewEmployee;
             window.saveInitialBalance = saveInitialBalance;
             window.calculateAndSaveEntry = calculateAndSaveEntry;
+            window.saveAndSuggestNext = saveAndSuggestNext; // NOVA FUNÇÃO EXPORTADA
             window.previewCalculation = previewCalculation;
             window.editEntry = editEntry;
             window.saveEditedEntry = saveEditedEntry;
