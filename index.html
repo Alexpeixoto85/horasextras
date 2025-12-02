@@ -1943,7 +1943,7 @@
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px;">
                         <input type="checkbox" id="include-code" checked>
-                        <span>Incluir código no nome do funcionário (ex: 008 - LILIANE PEREIRA DA SILVA)</span>
+                        <span>Incluir código no nome do funcionário (ex: 008 - Gislaine)</span>
                     </label>
                 </div>
             </div>
@@ -2486,7 +2486,7 @@
     </div>
 
     <script>
-        // Database structure com controle de dias úteis, feriados e atestados
+        // Database structure
         let db = {
             employees: [],
             employeeDetails: {},
@@ -2497,14 +2497,11 @@
             monthlyBalances: {},
             balanceHistory: {},
             workdaySettings: {
-                // Configurações padrão
                 dailyHours: 8,
                 lunchDuration: 60,
                 autoCalculateWorkdays: true,
                 includeHolidays: true,
                 includeCertificates: true,
-                
-                // Configurações por tipo de dia
                 weekday: {
                     start: '09:00',
                     end: '18:00',
@@ -2524,9 +2521,9 @@
                     hours: 0
                 }
             },
-            monthlyWorkdays: {}, // Dias úteis por mês (ex: "2024-12": 22)
-            holidays: {}, // Feriados por ano
-            medicalCertificates: {}, // Atestados por funcionário
+            monthlyWorkdays: {},
+            holidays: {},
+            medicalCertificates: {},
             settings: {
                 standardHours: 8,
                 standardStart: '09:00',
@@ -2559,19 +2556,13 @@
             // Set analysis period
             document.getElementById('analysis-start-month').value = `${yyyy}-01`;
             document.getElementById('analysis-end-month').value = `${yyyy}-${mm}`;
-            
-            // Load holidays for current year
-            loadHolidaysForYear(yyyy);
         });
 
         function initEventListeners() {
-            // Dark mode toggle
             document.getElementById('dark-mode-toggle').addEventListener('change', toggleDarkMode);
             
-            // Employee selection
             document.getElementById('employee-list').addEventListener('click', handleEmployeeClick);
             
-            // Close modals on outside click
             document.querySelectorAll('.modal').forEach(modal => {
                 modal.addEventListener('click', (e) => {
                     if (e.target === modal) {
@@ -2580,7 +2571,6 @@
                 });
             });
 
-            // Auto update preview when inputs change
             const modalInputs = [
                 'modal-entry-date', 'modal-entry-time', 'modal-lunch-out-time',
                 'modal-lunch-in-time', 'modal-exit-time'
@@ -2592,7 +2582,6 @@
                 }
             });
             
-            // File drop area events
             const fileDropArea = document.getElementById('file-drop-area');
             if (fileDropArea) {
                 fileDropArea.addEventListener('dragover', (e) => {
@@ -2614,10 +2603,8 @@
                 });
             }
             
-            // Workday settings month change
             document.getElementById('workday-config-month')?.addEventListener('change', updateWorkdaySettingsForm);
             
-            // Certificate date changes
             document.getElementById('certificate-start-date')?.addEventListener('change', calculateCertificateImpact);
             document.getElementById('certificate-end-date')?.addEventListener('change', calculateCertificateImpact);
         }
@@ -2627,7 +2614,6 @@
             const modal = document.getElementById(modalId);
             if (!modal) return;
 
-            // Modal-specific initialization
             switch(modalId) {
                 case 'add-employee-modal':
                     document.getElementById('new-employee-name').value = '';
@@ -2699,29 +2685,24 @@
                 employeeSelect.appendChild(option);
             });
             
-            // Set current date
             const today = new Date();
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             const dd = String(today.getDate()).padStart(2, '0');
             document.getElementById('modal-entry-date').value = `${yyyy}-${mm}-${dd}`;
             
-            // Set default times
             document.getElementById('modal-entry-time').value = db.settings.standardStart;
             document.getElementById('modal-lunch-out-time').value = db.settings.standardLunchOut;
             document.getElementById('modal-lunch-in-time').value = db.settings.standardLunchIn;
             document.getElementById('modal-exit-time').value = db.settings.standardEnd;
             
-            // Hide preview and day type
             document.getElementById('entry-preview').style.display = 'none';
             document.getElementById('day-type-indicator').style.display = 'none';
             
-            // Update day type
             updateDayTypeIndicator();
         }
 
         function initImportModal() {
-            // Reset file input
             document.getElementById('excel-file-input').value = '';
             document.getElementById('file-info').style.display = 'none';
             document.getElementById('preview-table-container').style.display = 'none';
@@ -2731,14 +2712,12 @@
             document.getElementById('import-errors').innerHTML = '';
             document.getElementById('import-errors').style.display = 'none';
             
-            // Disable buttons
             document.getElementById('process-button').disabled = true;
             document.getElementById('preview-button').disabled = true;
             
             excelFileData = null;
             excelPreviewData = [];
             
-            // Set current month as default
             const today = new Date();
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -2759,7 +2738,6 @@
                 select.appendChild(option);
             });
             
-            // Set current balances for selected employee
             if (currentEmployee) {
                 const positiveHours = getPositiveHours(currentEmployee);
                 const negativeHours = getNegativeHours(currentEmployee);
@@ -2771,7 +2749,6 @@
                 document.getElementById('initial-negative-input').value = '';
             }
             
-            // Clear description
             document.getElementById('balance-description').value = '';
         }
 
@@ -2805,7 +2782,6 @@
                 select.appendChild(option);
             });
             
-            // Set dates
             const today = new Date();
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -2813,7 +2789,6 @@
             document.getElementById('certificate-start-date').value = `${yyyy}-${mm}-${dd}`;
             document.getElementById('certificate-end-date').value = `${yyyy}-${mm}-${dd}`;
             
-            // Clear other fields
             document.getElementById('certificate-cid').value = '';
             document.getElementById('certificate-doctor').value = '';
             document.getElementById('certificate-notes').value = '';
@@ -2878,23 +2853,19 @@
             const monthYear = document.getElementById('workday-config-month').value;
             const [year, month] = monthYear.split('-').map(Number);
             
-            // Load existing settings for this month
             const monthKey = `${year}-${String(month).padStart(2, '0')}`;
             const workdays = db.monthlyWorkdays[monthKey] || calculateWorkdaysForMonth(year, month);
             
             document.getElementById('working-days-input').value = workdays;
             
-            // Set weekday settings
             document.getElementById('weekday-start').value = db.workdaySettings.weekday.start;
             document.getElementById('weekday-end').value = db.workdaySettings.weekday.end;
             document.getElementById('weekday-lunch').value = db.workdaySettings.weekday.lunch;
             
-            // Set Saturday settings
             document.getElementById('saturday-start').value = db.workdaySettings.saturday.start;
             document.getElementById('saturday-end').value = db.workdaySettings.saturday.end;
             document.getElementById('saturday-lunch').value = db.workdaySettings.saturday.lunch;
             
-            // Set Sunday settings
             document.getElementById('sunday-start').value = db.workdaySettings.sunday.start;
             document.getElementById('sunday-end').value = db.workdaySettings.sunday.end;
             document.getElementById('sunday-lunch').value = db.workdaySettings.sunday.lunch;
@@ -2902,7 +2873,7 @@
 
         function calculateWorkdaysForMonth(year, month) {
             if (!db.workdaySettings.autoCalculateWorkdays) {
-                return 22; // Default
+                return 22;
             }
             
             let workdays = 0;
@@ -2912,12 +2883,10 @@
                 const date = new Date(year, month - 1, day);
                 const dayOfWeek = date.getDay();
                 
-                // Check if it's a weekend
                 if (dayOfWeek === 0 || dayOfWeek === 6) {
                     continue;
                 }
                 
-                // Check if it's a holiday
                 const dateStr = date.toISOString().split('T')[0];
                 if (isHoliday(dateStr)) {
                     continue;
@@ -2948,7 +2917,6 @@
             const date = new Date(dateStr);
             const dayOfWeek = date.getDay();
             
-            // Check if it's a holiday
             if (isHoliday(dateStr)) {
                 const year = date.getFullYear();
                 const holiday = db.holidays[year]?.find(h => h.date === dateStr);
@@ -2960,19 +2928,19 @@
             }
             
             switch(dayOfWeek) {
-                case 0: // Sunday
+                case 0:
                     return {
                         type: 'sunday',
                         name: 'Domingo',
                         hours: db.workdaySettings.sunday.hours
                     };
-                case 6: // Saturday
+                case 6:
                     return {
                         type: 'saturday',
                         name: 'Sábado',
                         hours: db.workdaySettings.saturday.hours
                     };
-                default: // Weekday
+                default:
                     return {
                         type: 'weekday',
                         name: 'Dia Útil',
@@ -3027,7 +2995,6 @@
             const monthKey = `${year}-${String(month).padStart(2, '0')}`;
             db.monthlyWorkdays[monthKey] = workdays;
             
-            // Save weekday settings
             db.workdaySettings.weekday = {
                 start: document.getElementById('weekday-start').value,
                 end: document.getElementById('weekday-end').value,
@@ -3039,7 +3006,6 @@
                 )
             };
             
-            // Save Saturday settings
             db.workdaySettings.saturday = {
                 start: document.getElementById('saturday-start').value,
                 end: document.getElementById('saturday-end').value,
@@ -3051,7 +3017,6 @@
                 )
             };
             
-            // Save Sunday settings
             db.workdaySettings.sunday = {
                 start: document.getElementById('sunday-start').value,
                 end: document.getElementById('sunday-end').value,
@@ -3082,15 +3047,12 @@
             const month = today.getMonth() + 1;
             const monthKey = `${year}-${String(month).padStart(2, '0')}`;
             
-            // Working days
             const workdays = db.monthlyWorkdays[monthKey] || calculateWorkdaysForMonth(year, month);
             document.getElementById('working-days-count').textContent = workdays;
             
-            // Holidays count
             const holidaysCount = db.holidays[year] ? db.holidays[year].length : 0;
             document.getElementById('holidays-count').textContent = holidaysCount;
             
-            // Medical certificates count
             let certificatesCount = 0;
             if (db.medicalCertificates) {
                 Object.values(db.medicalCertificates).forEach(certs => {
@@ -3099,25 +3061,1321 @@
             }
             document.getElementById('medical-certificates-count').textContent = certificatesCount;
             
-            // Expected hours
             const expectedHours = workdays * db.workdaySettings.dailyHours;
             document.getElementById('expected-month-hours').textContent = `${expectedHours}:00`;
             
-            // Update workdays config text
             const configMonth = document.getElementById('workday-config-month').value;
             const [configYear, configMonthNum] = configMonth.split('-');
             const configWorkdays = db.monthlyWorkdays[`${configYear}-${configMonthNum}`] || calculateWorkdaysForMonth(configYear, configMonthNum);
             document.getElementById('workdays-config').textContent = `${configWorkdays} dias`;
             
-            // Update holidays list text
             if (holidaysCount > 0) {
                 document.getElementById('holidays-list').textContent = `${holidaysCount} feriados`;
             }
             
-            // Update certificates list text
             if (certificatesCount > 0) {
                 document.getElementById('certificates-list').textContent = `${certificatesCount} atestados`;
             }
+        }
+
+        // Funções de Importação de Excel
+        function handleFileSelect(files) {
+            if (files.length === 0) return;
+            
+            const file = files[0];
+            
+            if (!file.name.match(/\.(xlsx|xls)$/i)) {
+                showNotification('Por favor, selecione um arquivo Excel (.xlsx ou .xls)', 'warning');
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    excelFileData = workbook;
+                    
+                    document.getElementById('file-name').textContent = file.name;
+                    document.getElementById('file-size').textContent = formatFileSize(file.size);
+                    document.getElementById('file-info').style.display = 'flex';
+                    
+                    document.getElementById('process-button').disabled = false;
+                    document.getElementById('preview-button').disabled = false;
+                    
+                    showNotification('Arquivo carregado com sucesso! Clique em "Pré-visualizar" para ver os dados.', 'success');
+                } catch (error) {
+                    console.error('Erro ao ler arquivo Excel:', error);
+                    showNotification('Erro ao ler o arquivo Excel. Verifique se o arquivo não está corrompido.', 'danger');
+                }
+            };
+            
+            reader.onerror = function() {
+                showNotification('Erro ao ler o arquivo.', 'danger');
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function clearSelectedFile() {
+            document.getElementById('excel-file-input').value = '';
+            document.getElementById('file-info').style.display = 'none';
+            document.getElementById('preview-table-container').style.display = 'none';
+            document.getElementById('process-button').disabled = true;
+            document.getElementById('preview-button').disabled = true;
+            excelFileData = null;
+            excelPreviewData = [];
+        }
+
+        function previewExcelData() {
+            if (!excelFileData) {
+                showNotification('Nenhum arquivo Excel carregado.', 'warning');
+                return;
+            }
+            
+            try {
+                const previewData = parseExcelData(excelFileData);
+                excelPreviewData = previewData;
+                
+                if (previewData.length === 0) {
+                    showNotification('Nenhum dado encontrado no arquivo Excel.', 'warning');
+                    return;
+                }
+                
+                const tableBody = document.getElementById('preview-table-body');
+                tableBody.innerHTML = '';
+                
+                previewData.slice(0, 50).forEach((row, index) => {
+                    const tr = document.createElement('tr');
+                    
+                    tr.innerHTML = `
+                        <td>${row.employee || ''}</td>
+                        <td>${row.date || ''}</td>
+                        <td>${row.entry || ''}</td>
+                        <td>${row.lunchOut || ''}</td>
+                        <td>${row.lunchIn || ''}</td>
+                        <td>${row.exit || ''}</td>
+                        <td>${row.balance || ''}</td>
+                    `;
+                    
+                    tableBody.appendChild(tr);
+                });
+                
+                document.getElementById('preview-table-container').style.display = 'block';
+                
+                showNotification(`Pré-visualização carregada: ${previewData.length} registros encontrados`, 'success');
+            } catch (error) {
+                console.error('Erro ao processar Excel:', error);
+                showNotification('Erro ao processar o arquivo Excel. Verifique o formato.', 'danger');
+            }
+        }
+
+        function parseExcelData(workbook) {
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            
+            const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+            
+            const results = [];
+            let currentEmployee = null;
+            let employeeCode = null;
+            let monthYear = document.getElementById('import-reference-month').value;
+            
+            if (!monthYear) {
+                monthYear = new Date().toISOString().slice(0, 7);
+            }
+            
+            const [year, month] = monthYear.split('-').map(Number);
+            
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
+                
+                if (i === 0) {
+                    continue;
+                }
+                
+                if (i === 1 && row[2]) {
+                    const cellValue = row[2].toString();
+                    const lines = cellValue.split('\n');
+                    
+                    for (const line of lines) {
+                        const trimmedLine = line.trim();
+                        
+                        if (trimmedLine.includes('EXCELENCIA LINGERIE LTDA')) {
+                            continue;
+                        }
+                        
+                        const codeMatch = trimmedLine.match(/^(\d{3})\s*-\s*(.+)$/);
+                        if (codeMatch) {
+                            employeeCode = codeMatch[1].trim();
+                            const employeeName = codeMatch[2].trim();
+                            
+                            const includeCode = document.getElementById('include-code').checked;
+                            currentEmployee = includeCode ? 
+                                `${employeeCode} - ${employeeName}` : 
+                                employeeName;
+                            
+                            if (document.getElementById('create-missing-employees').checked) {
+                                addEmployeeIfNotExists(currentEmployee, employeeCode);
+                            }
+                        }
+                    }
+                }
+                
+                if (row[0] && !isNaN(row[0]) && row[0] >= 1 && row[0] <= 31) {
+                    const day = parseInt(row[0]);
+                    const weekday = row[1];
+                    
+                    if (currentEmployee && (row[2] || row[3] || row[4] || row[5])) {
+                        const entry = {
+                            employee: currentEmployee,
+                            date: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+                            entry: formatTimeValue(row[2]),
+                            lunchOut: formatTimeValue(row[3]),
+                            lunchIn: formatTimeValue(row[4]),
+                            exit: formatTimeValue(row[5]),
+                            weekday: weekday
+                        };
+                        
+                        if (entry.entry || entry.lunchOut || entry.lunchIn || entry.exit) {
+                            const balance = calculateDailyBalanceForPreview(entry);
+                            entry.balance = balance;
+                            results.push(entry);
+                        }
+                    }
+                }
+            }
+            
+            return results;
+        }
+
+        function formatTimeValue(value) {
+            if (!value) return '';
+            
+            let strValue = value.toString().trim();
+            
+            strValue = strValue.replace('085:', '08:');
+            
+            if (strValue.includes(':')) {
+                const parts = strValue.split(':');
+                if (parts.length >= 2) {
+                    const hours = parts[0].padStart(2, '0');
+                    const minutes = parts[1].slice(0, 2).padStart(2, '0');
+                    return `${hours}:${minutes}`;
+                }
+            }
+            
+            if (strValue.length >= 4) {
+                const hours = strValue.slice(0, 2).padStart(2, '0');
+                const minutes = strValue.slice(2, 4).padStart(2, '0');
+                return `${hours}:${minutes}`;
+            }
+            
+            return '';
+        }
+
+        function calculateDailyBalanceForPreview(entry) {
+            if (!entry.entry || !entry.lunchOut || !entry.lunchIn || !entry.exit) {
+                return '00:00';
+            }
+            
+            const entryMin = timeToMinutes(entry.entry);
+            const lunchOutMin = timeToMinutes(entry.lunchOut);
+            const lunchInMin = timeToMinutes(entry.lunchIn);
+            const exitMin = timeToMinutes(entry.exit);
+            
+            const morningWork = Math.max(0, lunchOutMin - entryMin);
+            const afternoonWork = Math.max(0, exitMin - lunchInMin);
+            const totalWorked = morningWork + afternoonWork;
+            
+            const expectedMinutes = db.workdaySettings.dailyHours * 60;
+            const balance = totalWorked - expectedMinutes;
+            
+            return minutesToHHMM(balance);
+        }
+
+        function processExcelFile() {
+            if (!excelFileData || excelPreviewData.length === 0) {
+                showNotification('Por favor, faça primeiro a pré-visualização dos dados.', 'warning');
+                return;
+            }
+            
+            const skipDuplicates = document.getElementById('skip-duplicates').checked;
+            const overrideExisting = document.getElementById('override-existing').checked;
+            const createMissingEmployees = document.getElementById('create-missing-employees').checked;
+            
+            document.getElementById('import-progress').style.display = 'block';
+            document.getElementById('progress-fill').style.width = '0%';
+            document.getElementById('progress-current').textContent = '0';
+            document.getElementById('progress-total').textContent = excelPreviewData.length;
+            
+            let importedCount = 0;
+            let skippedCount = 0;
+            let errorCount = 0;
+            let createdEmployees = 0;
+            
+            const employeeSet = new Set();
+            
+            excelPreviewData.forEach((entry, index) => {
+                setTimeout(() => {
+                    try {
+                        if (!entry.employee) {
+                            errorCount++;
+                            return;
+                        }
+                        
+                        if (!db.employees.includes(entry.employee) && createMissingEmployees) {
+                            addEmployeeIfNotExists(entry.employee);
+                            createdEmployees++;
+                            employeeSet.add(entry.employee);
+                        }
+                        
+                        if (!db.employees.includes(entry.employee)) {
+                            errorCount++;
+                            return;
+                        }
+                        
+                        if (!entry.date || (!entry.entry && !entry.lunchOut && !entry.lunchIn && !entry.exit)) {
+                            skippedCount++;
+                            return;
+                        }
+                        
+                        const existingIndex = db.entries[entry.employee] ? 
+                            db.entries[entry.employee].findIndex(e => e.date === entry.date) : -1;
+                        
+                        if (existingIndex > -1) {
+                            if (skipDuplicates) {
+                                skippedCount++;
+                                return;
+                            }
+                            
+                            if (overrideExisting) {
+                                const oldBalance = db.entries[entry.employee][existingIndex].balanceMinutes || 0;
+                                updateBalanceForEntry(entry.employee, -oldBalance);
+                                db.entries[entry.employee][existingIndex] = createEntryObject(entry);
+                                const newBalance = db.entries[entry.employee][existingIndex].balanceMinutes || 0;
+                                updateBalanceForEntry(entry.employee, newBalance);
+                                importedCount++;
+                            } else {
+                                skippedCount++;
+                            }
+                        } else {
+                            if (!db.entries[entry.employee]) {
+                                db.entries[entry.employee] = [];
+                            }
+                            
+                            const newEntry = createEntryObject(entry);
+                            db.entries[entry.employee].push(newEntry);
+                            updateBalanceForEntry(entry.employee, newEntry.balanceMinutes || 0);
+                            importedCount++;
+                        }
+                        
+                        const progress = ((index + 1) / excelPreviewData.length) * 100;
+                        document.getElementById('progress-fill').style.width = `${progress}%`;
+                        document.getElementById('progress-current').textContent = index + 1;
+                        
+                        if (index === excelPreviewData.length - 1) {
+                            finalizeImport(importedCount, skippedCount, errorCount, createdEmployees);
+                        }
+                    } catch (error) {
+                        console.error('Erro ao processar registro:', error, entry);
+                        errorCount++;
+                    }
+                }, index * 10);
+            });
+        }
+
+        function createEntryObject(entry) {
+            const dayType = getDayType(entry.date);
+            const expectedHours = dayType.hours;
+            
+            const entryMin = timeToMinutes(entry.entry);
+            const lunchOutMin = timeToMinutes(entry.lunchOut);
+            const lunchInMin = timeToMinutes(entry.lunchIn);
+            const exitMin = timeToMinutes(entry.exit);
+            
+            const morningWork = Math.max(0, lunchOutMin - entryMin);
+            const afternoonWork = Math.max(0, exitMin - lunchInMin);
+            const totalWorked = morningWork + afternoonWork;
+            const expectedMinutes = expectedHours * 60;
+            const balanceMinutes = totalWorked - expectedMinutes;
+            
+            return {
+                id: Date.now().toString() + Math.random(),
+                date: entry.date,
+                entry: entry.entry,
+                lunchOut: entry.lunchOut,
+                lunchIn: entry.lunchIn,
+                exit: entry.exit,
+                totalWorkedMinutes: totalWorked,
+                balanceMinutes: balanceMinutes,
+                dayType: dayType.type,
+                expectedHours: expectedHours,
+                weekday: entry.weekday
+            };
+        }
+
+        function finalizeImport(imported, skipped, errors, createdEmployees) {
+            saveData();
+            
+            const summaryDiv = document.getElementById('import-summary');
+            summaryDiv.innerHTML = `
+                <div class="import-summary">
+                    <h4 style="margin-bottom: 15px; color: var(--success-color);">✅ Importação Concluída!</h4>
+                    <div class="import-stats">
+                        <div class="stat-item">
+                            <div>Registros Importados</div>
+                            <div class="stat-value-large">${imported}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Funcionários Criados</div>
+                            <div class="stat-value-large">${createdEmployees}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Registros Ignorados</div>
+                            <div class="stat-value-large">${skipped}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Erros</div>
+                            <div class="stat-value-large">${errors}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            summaryDiv.style.display = 'block';
+            
+            if (errors > 0) {
+                const errorDiv = document.getElementById('import-errors');
+                errorDiv.innerHTML = `
+                    <div class="import-error">
+                        <h4 style="margin-bottom: 10px; color: var(--danger-color);">⚠️ Atenção</h4>
+                        <p>${errors} registro(s) não puderam ser importados devido a erros.</p>
+                    </div>
+                `;
+                errorDiv.style.display = 'block';
+            }
+            
+            updateEmployeeList();
+            if (db.employees.length > 0 && !currentEmployee) {
+                selectEmployee(db.employees[0]);
+            }
+            
+            showNotification(`Importação concluída! ${imported} registros importados, ${createdEmployees} funcionários criados.`, 'success');
+        }
+
+        function addEmployeeIfNotExists(employeeName, code = null) {
+            if (!db.employees.includes(employeeName)) {
+                db.employees.push(employeeName);
+                db.employeeDetails[employeeName] = {
+                    fullName: employeeName,
+                    code: code,
+                    importDate: new Date().toISOString()
+                };
+                
+                db.entries[employeeName] = [];
+                db.positiveHours[employeeName] = 0;
+                db.negativeHours[employeeName] = 0;
+                
+                return true;
+            }
+            return false;
+        }
+
+        // Funções do Sistema
+        function timeToMinutes(timeStr) {
+            if (!timeStr) return 0;
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            return hours * 60 + minutes;
+        }
+
+        function minutesToHHMM(totalMinutes) {
+            if (isNaN(totalMinutes)) return "00:00";
+            
+            const sign = totalMinutes < 0 ? '-' : '';
+            const absMinutes = Math.abs(totalMinutes);
+            
+            const hours = Math.floor(absMinutes / 60);
+            const minutes = Math.round(absMinutes % 60);
+            return `${sign}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        }
+
+        function HHMMtoMinutes(hhmm) {
+            if (!hhmm) return 0;
+            const sign = hhmm.startsWith('-') ? -1 : 1;
+            const time = hhmm.replace(/[+-]/, '');
+            const [hours, minutes] = time.split(':').map(Number);
+            return sign * (hours * 60 + minutes);
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const [y, m, d] = dateStr.split('-');
+            return `${d}/${m}/${y}`;
+        }
+
+        function calculateDailyBalance(entry) {
+            const dateStr = entry.date;
+            const dayType = getDayType(dateStr);
+            const expectedHours = dayType.hours;
+            
+            const entryMin = timeToMinutes(entry.entry);
+            const lunchOutMin = timeToMinutes(entry.lunchOut);
+            const lunchInMin = timeToMinutes(entry.lunchIn);
+            const exitMin = timeToMinutes(entry.exit);
+            
+            const morningWork = Math.max(0, lunchOutMin - entryMin);
+            const afternoonWork = Math.max(0, exitMin - lunchInMin);
+            const totalWorked = morningWork + afternoonWork;
+            
+            if (entry.employee && isDateAffectedByCertificate(entry.employee, dateStr)) {
+                return totalWorked;
+            }
+            
+            const expectedMinutes = expectedHours * 60;
+            return totalWorked - expectedMinutes;
+        }
+
+        function isDateAffectedByCertificate(employee, dateStr) {
+            if (!db.workdaySettings.includeCertificates || !db.medicalCertificates[employee]) {
+                return false;
+            }
+            
+            return db.medicalCertificates[employee].some(certificate => {
+                return certificate.status === 'active' && 
+                       certificate.affectedDates.includes(dateStr);
+            });
+        }
+
+        function calculateAndSaveEntry() {
+            const employee = document.getElementById('modal-employee-select').value;
+            const date = document.getElementById('modal-entry-date').value;
+            const entry = document.getElementById('modal-entry-time').value;
+            const lunchOut = document.getElementById('modal-lunch-out-time').value;
+            const lunchIn = document.getElementById('modal-lunch-in-time').value;
+            const exit = document.getElementById('modal-exit-time').value;
+            
+            if (!employee || !date || !entry || !lunchOut || !lunchIn || !exit) {
+                showNotification('Por favor, preencha todos os campos.', 'warning');
+                return;
+            }
+            
+            const dayType = getDayType(date);
+            const hasCertificate = isDateAffectedByCertificate(employee, date);
+            
+            const balanceMinutes = calculateDailyBalance({
+                date, entry, lunchOut, lunchIn, exit, employee
+            });
+            
+            const expectedHours = hasCertificate ? 0 : dayType.hours;
+            const totalWorkedMinutes = Math.abs(balanceMinutes) + (expectedHours * 60);
+            
+            const newEntry = {
+                id: Date.now().toString(),
+                date,
+                entry,
+                lunchOut,
+                lunchIn,
+                exit,
+                totalWorkedMinutes,
+                balanceMinutes,
+                dayType: dayType.type,
+                expectedHours: expectedHours,
+                hasCertificate: hasCertificate
+            };
+            
+            if (!db.entries[employee]) {
+                db.entries[employee] = [];
+            }
+            
+            const existingIndex = db.entries[employee].findIndex(e => e.date === date);
+            if (existingIndex > -1) {
+                if (confirm('Já existe um lançamento para esta data. Deseja substituir?')) {
+                    const oldBalance = db.entries[employee][existingIndex].balanceMinutes;
+                    updateBalanceForEntry(employee, -oldBalance);
+                    
+                    db.entries[employee][existingIndex] = newEntry;
+                } else {
+                    return;
+                }
+            } else {
+                db.entries[employee].push(newEntry);
+            }
+            
+            updateBalanceForEntry(employee, balanceMinutes);
+            
+            db.entries[employee].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            saveData();
+            
+            updateAllUIComponents(employee);
+            
+            closeModal('time-entry-modal');
+            showNotification('Horários lançados com sucesso!', 'success');
+        }
+
+        function updateBalanceForEntry(employee, balanceMinutes) {
+            if (balanceMinutes > 0) {
+                db.positiveHours[employee] = (db.positiveHours[employee] || 0) + balanceMinutes;
+            } else if (balanceMinutes < 0) {
+                db.negativeHours[employee] = (db.negativeHours[employee] || 0) + Math.abs(balanceMinutes);
+            }
+            
+            updateMonthlyBalance(employee);
+        }
+
+        function updateMonthlyBalance(employee) {
+            if (!db.entries[employee]) return;
+            
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear();
+            const currentMonth = currentDate.getMonth() + 1;
+            const monthKey = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+            
+            if (!db.monthlyBalances[employee]) {
+                db.monthlyBalances[employee] = {};
+            }
+            
+            const monthEntries = db.entries[employee].filter(entry => {
+                const entryDate = new Date(entry.date);
+                return entryDate.getFullYear() === currentYear && 
+                       entryDate.getMonth() + 1 === currentMonth;
+            });
+            
+            let monthPositive = 0;
+            let monthNegative = 0;
+            
+            monthEntries.forEach(entry => {
+                if (entry.balanceMinutes > 0) {
+                    monthPositive += entry.balanceMinutes;
+                } else if (entry.balanceMinutes < 0) {
+                    monthNegative += Math.abs(entry.balanceMinutes);
+                }
+            });
+            
+            db.monthlyBalances[employee][monthKey] = {
+                positive: monthPositive,
+                negative: monthNegative,
+                net: monthPositive - monthNegative
+            };
+        }
+
+        function getPositiveHours(employee) {
+            return db.positiveHours[employee] || 0;
+        }
+
+        function getNegativeHours(employee) {
+            return db.negativeHours[employee] || 0;
+        }
+
+        function calculateTotalBalance(employee) {
+            const positive = getPositiveHours(employee);
+            const negative = getNegativeHours(employee);
+            return positive - negative;
+        }
+
+        function calculateNetBalance(employee) {
+            const totalBalance = calculateTotalBalance(employee);
+            return totalBalance;
+        }
+
+        function calculateCurrentMonthOvertime(employee) {
+            if (!db.monthlyBalances[employee]) return 0;
+            
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear();
+            const currentMonth = currentDate.getMonth() + 1;
+            const monthKey = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+            
+            const monthBalance = db.monthlyBalances[employee][monthKey];
+            if (!monthBalance) return 0;
+            
+            return monthBalance.net;
+        }
+
+        // UI Updates
+        function updateUI() {
+            updateEmployeeList();
+            
+            if (currentEmployee) {
+                updateAllUIComponents(currentEmployee);
+            } else {
+                resetUI();
+            }
+        }
+
+        function updateEmployeeList() {
+            const employeeList = document.getElementById('employee-list');
+            employeeList.innerHTML = '';
+            
+            db.employees.forEach(employee => {
+                const li = document.createElement('li');
+                li.className = `employee-item ${employee === currentEmployee ? 'active' : ''}`;
+                li.dataset.employee = employee;
+                
+                const balance = calculateTotalBalance(employee);
+                const balanceText = minutesToHHMM(balance);
+                
+                li.innerHTML = `
+                    <span>${employee}</span>
+                    <span class="employee-hours">${balanceText}</span>
+                `;
+                
+                li.addEventListener('click', () => selectEmployee(employee));
+                employeeList.appendChild(li);
+            });
+        }
+
+        function handleEmployeeClick(e) {
+            const employeeItem = e.target.closest('.employee-item');
+            if (employeeItem) {
+                const employee = employeeItem.dataset.employee;
+                selectEmployee(employee);
+            }
+        }
+
+        function selectEmployee(employee) {
+            currentEmployee = employee;
+            
+            document.querySelectorAll('.employee-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            document.querySelector(`.employee-item[data-employee="${employee}"]`)?.classList.add('active');
+            
+            document.getElementById('employee-name-display').style.display = 'flex';
+            document.getElementById('selected-employee-name').textContent = employee;
+            
+            updateAllUIComponents(employee);
+        }
+
+        function updateAllUIComponents(employee) {
+            updateBalanceDetails(employee);
+            updateDetailedBalanceCards(employee);
+            updateStatistics(employee);
+            updateInitialBalanceDisplay(employee);
+            updateChangeIndicators(employee);
+            refreshHistory();
+            updateWorkdayInfo();
+        }
+
+        function updateBalanceDetails(employee) {
+            const positiveHours = getPositiveHours(employee);
+            const negativeHours = getNegativeHours(employee);
+            const totalBalance = positiveHours - negativeHours;
+            const netBalance = calculateNetBalance(employee);
+            const monthOvertime = calculateCurrentMonthOvertime(employee);
+            
+            const positivePercent = positiveHours > 0 ? (positiveHours / (positiveHours + negativeHours)) * 100 : 0;
+            const negativePercent = negativeHours > 0 ? (negativeHours / (positiveHours + negativeHours)) * 100 : 0;
+            
+            document.getElementById('current-balance').textContent = minutesToHHMM(totalBalance);
+            document.getElementById('positive-balance-fill').style.width = `${positivePercent}%`;
+            document.getElementById('negative-balance-fill').style.width = `${negativePercent}%`;
+            document.getElementById('positive-hours-label').textContent = `${minutesToHHMM(positiveHours)} +`;
+            document.getElementById('negative-hours-label').textContent = `${minutesToHHMM(negativeHours)} -`;
+            
+            document.getElementById('initial-balance-summary').textContent = minutesToHHMM(totalBalance - monthOvertime);
+            document.getElementById('monthly-overtime-summary').textContent = minutesToHHMM(monthOvertime);
+            document.getElementById('total-balance-summary').textContent = minutesToHHMM(totalBalance);
+            document.getElementById('net-balance-summary').textContent = minutesToHHMM(netBalance);
+            
+            document.getElementById('initial-positive-hours').textContent = `${minutesToHHMM(positiveHours - (monthOvertime > 0 ? monthOvertime : 0))} +`;
+            document.getElementById('initial-negative-hours').textContent = `${minutesToHHMM(negativeHours - (monthOvertime < 0 ? Math.abs(monthOvertime) : 0))} -`;
+            
+            document.getElementById('month-positive-hours').textContent = `${minutesToHHMM(monthOvertime > 0 ? monthOvertime : 0)} +`;
+            document.getElementById('month-negative-hours').textContent = `${minutesToHHMM(monthOvertime < 0 ? Math.abs(monthOvertime) : 0)} -`;
+            
+            document.getElementById('total-positive-hours').textContent = `${minutesToHHMM(positiveHours)} +`;
+            document.getElementById('total-negative-hours').textContent = `${minutesToHHMM(negativeHours)} -`;
+            
+            document.getElementById('net-status').textContent = netBalance >= 0 ? 'Positivo' : 'Negativo';
+            document.getElementById('net-status').className = `balance-detail-item ${netBalance >= 0 ? 'positive' : 'negative'}`;
+            document.getElementById('net-difference').textContent = minutesToHHMM(Math.abs(netBalance));
+            
+            document.getElementById('initial-balance-display').textContent = minutesToHHMM(totalBalance);
+            document.getElementById('balance-indicator').className = `balance-indicator ${netBalance >= 0 ? 'balance-positive' : 'balance-negative'}`;
+            
+            if (totalBalance > 0) {
+                document.getElementById('balance-change-text').textContent = `+${minutesToHHMM(totalBalance)} extras`;
+                document.getElementById('balance-change').className = 'stat-change positive';
+            } else if (totalBalance < 0) {
+                document.getElementById('balance-change-text').textContent = `${minutesToHHMM(totalBalance)} falta`;
+                document.getElementById('balance-change').className = 'stat-change negative';
+            } else {
+                document.getElementById('balance-change-text').textContent = 'Equilibrado';
+                document.getElementById('balance-change').className = 'stat-change';
+            }
+        }
+
+        function updateDetailedBalanceCards(employee) {
+            const positiveHours = getPositiveHours(employee);
+            const negativeHours = getNegativeHours(employee);
+            const totalBalance = positiveHours - negativeHours;
+            const monthOvertime = calculateCurrentMonthOvertime(employee);
+            
+            const initialPositive = positiveHours - (monthOvertime > 0 ? monthOvertime : 0);
+            const initialNegative = negativeHours - (monthOvertime < 0 ? Math.abs(monthOvertime) : 0);
+            const monthPositive = monthOvertime > 0 ? monthOvertime : 0;
+            const monthNegative = monthOvertime < 0 ? Math.abs(monthOvertime) : 0;
+            
+            document.getElementById('positive-balance-value').textContent = minutesToHHMM(positiveHours);
+            document.getElementById('positive-initial').textContent = minutesToHHMM(initialPositive);
+            document.getElementById('positive-current-month').textContent = minutesToHHMM(monthPositive);
+            
+            document.getElementById('negative-balance-value').textContent = minutesToHHMM(negativeHours);
+            document.getElementById('negative-initial').textContent = minutesToHHMM(initialNegative);
+            document.getElementById('negative-current-month').textContent = minutesToHHMM(monthNegative);
+            
+            document.getElementById('net-balance-value').textContent = minutesToHHMM(totalBalance);
+            document.getElementById('net-difference-value').textContent = minutesToHHMM(Math.abs(totalBalance));
+            document.getElementById('net-balance-status').textContent = totalBalance >= 0 ? 'Positivo' : 'Negativo';
+            document.getElementById('net-balance-status').className = totalBalance >= 0 ? 'breakdown-value positive' : 'breakdown-value negative';
+            
+            const positivePercent = positiveHours > 0 ? (positiveHours / (positiveHours + negativeHours)) * 100 : 0;
+            const negativePercent = negativeHours > 0 ? (negativeHours / (positiveHours + negativeHours)) * 100 : 0;
+            
+            document.getElementById('positive-bar-fill').style.width = `${positivePercent}%`;
+            document.getElementById('negative-bar-fill').style.width = `${negativePercent}%`;
+            document.getElementById('net-positive-fill').style.width = `${positivePercent}%`;
+            document.getElementById('net-negative-fill').style.width = `${negativePercent}%`;
+            
+            if (totalBalance > 0) {
+                document.getElementById('balance-status').textContent = 'Positivo - Horas extras acumuladas';
+                document.getElementById('positive-balance-card').className = 'hours-balance-card positive';
+                document.getElementById('negative-balance-card').className = 'hours-balance-card';
+                document.getElementById('net-balance-card').className = 'hours-balance-card positive';
+                document.getElementById('net-status-indicator').className = 'status-indicator status-positive';
+                document.getElementById('net-status-indicator').textContent = 'Positivo';
+            } else if (totalBalance < 0) {
+                document.getElementById('balance-status').textContent = 'Negativo - Horas em falta';
+                document.getElementById('positive-balance-card').className = 'hours-balance-card';
+                document.getElementById('negative-balance-card').className = 'hours-balance-card negative';
+                document.getElementById('net-balance-card').className = 'hours-balance-card negative';
+                document.getElementById('net-status-indicator').className = 'status-indicator status-negative';
+                document.getElementById('net-status-indicator').textContent = 'Negativo';
+            } else {
+                document.getElementById('balance-status').textContent = 'Equilibrado - Sem horas extras ou faltas';
+                document.getElementById('positive-balance-card').className = 'hours-balance-card';
+                document.getElementById('negative-balance-card').className = 'hours-balance-card';
+                document.getElementById('net-balance-card').className = 'hours-balance-card neutral';
+                document.getElementById('net-status-indicator').className = 'status-indicator status-neutral';
+                document.getElementById('net-status-indicator').textContent = 'Neutro';
+            }
+        }
+
+        function updateStatistics(employee) {
+            if (!employee) return;
+            
+            const entries = db.entries[employee] || [];
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear();
+            const currentMonth = currentDate.getMonth() + 1;
+            
+            const monthEntries = entries.filter(entry => {
+                const entryDate = new Date(entry.date);
+                return entryDate.getFullYear() === currentYear && 
+                       entryDate.getMonth() + 1 === currentMonth;
+            });
+            
+            let totalMonthMinutes = 0;
+            let monthOvertime = 0;
+            
+            monthEntries.forEach(entry => {
+                totalMonthMinutes += entry.totalWorkedMinutes || 0;
+                if (entry.balanceMinutes > 0) {
+                    monthOvertime += entry.balanceMinutes;
+                }
+            });
+            
+            const totalBalance = calculateTotalBalance(employee);
+            const previousBalance = db.balanceHistory[employee] ? 
+                db.balanceHistory[employee].slice(-2)[0] || 0 : 0;
+            const balanceChange = totalBalance - previousBalance;
+            
+            document.getElementById('total-month-hours').textContent = minutesToHHMM(totalMonthMinutes);
+            document.getElementById('month-overtime').textContent = minutesToHHMM(monthOvertime);
+            document.getElementById('total-balance').textContent = minutesToHHMM(totalBalance);
+            
+            if (balanceChange > 0) {
+                document.getElementById('total-change').textContent = `+${minutesToHHMM(balanceChange)} este mês`;
+                document.getElementById('total-change').className = 'positive';
+            } else if (balanceChange < 0) {
+                document.getElementById('total-change').textContent = `${minutesToHHMM(balanceChange)} este mês`;
+                document.getElementById('total-change').className = 'negative';
+            } else {
+                document.getElementById('total-change').textContent = 'Sem alteração';
+                document.getElementById('total-change').className = '';
+            }
+        }
+
+        function updateInitialBalanceDisplay(employee) {
+            if (!employee) return;
+            
+            const positiveHours = getPositiveHours(employee);
+            const negativeHours = getNegativeHours(employee);
+            
+            document.getElementById('initial-balance-display').textContent = minutesToHHMM(positiveHours - negativeHours);
+        }
+
+        function updateChangeIndicators(employee) {
+            if (!employee) return;
+            
+            const currentBalance = calculateTotalBalance(employee);
+            
+            if (!db.balanceHistory[employee]) {
+                db.balanceHistory[employee] = [];
+            }
+            
+            db.balanceHistory[employee].push(currentBalance);
+            
+            if (db.balanceHistory[employee].length > 10) {
+                db.balanceHistory[employee] = db.balanceHistory[employee].slice(-10);
+            }
+            
+            saveData();
+        }
+
+        function refreshHistory() {
+            const historyContent = document.getElementById('history-content');
+            
+            if (!currentEmployee || !db.entries[currentEmployee] || db.entries[currentEmployee].length === 0) {
+                historyContent.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <div class="empty-state-title">Nenhum lançamento</div>
+                        <div class="empty-state-text">Não há registros de ponto para este funcionário.</div>
+                        <button class="btn btn-primary" onclick="openModal('time-entry-modal')">
+                            ⏰ Fazer Primeiro Lançamento
+                        </button>
+                    </div>
+                `;
+                document.getElementById('history-count').textContent = '0';
+                return;
+            }
+            
+            const entries = [...db.entries[currentEmployee]].reverse().slice(0, 50);
+            
+            let html = `
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Dia</th>
+                                <th>Entrada</th>
+                                <th>Saída Almoço</th>
+                                <th>Retorno</th>
+                                <th>Saída</th>
+                                <th>Total</th>
+                                <th>Balanço</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            entries.forEach(entry => {
+                const date = new Date(entry.date);
+                const dayOfWeek = date.getDay();
+                const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+                const weekday = days[dayOfWeek];
+                
+                const balanceClass = entry.balanceMinutes > 0 ? 'badge-positive' : 
+                                   entry.balanceMinutes < 0 ? 'badge-negative' : '';
+                
+                const balanceText = entry.balanceMinutes > 0 ? `+${minutesToHHMM(entry.balanceMinutes)}` :
+                                   entry.balanceMinutes < 0 ? minutesToHHMM(entry.balanceMinutes) :
+                                   '00:00';
+                
+                html += `
+                    <tr>
+                        <td>${formatDate(entry.date)}</td>
+                        <td>${weekday}</td>
+                        <td>${entry.entry || '-'}</td>
+                        <td>${entry.lunchOut || '-'}</td>
+                        <td>${entry.lunchIn || '-'}</td>
+                        <td>${entry.exit || '-'}</td>
+                        <td>${minutesToHHMM(entry.totalWorkedMinutes || 0)}</td>
+                        <td><span class="badge ${balanceClass}">${balanceText}</span></td>
+                        <td>
+                            <button class="btn btn-icon" onclick="editEntry('${entry.id}')" title="Editar">
+                                ✏️
+                            </button>
+                            <button class="btn btn-icon" onclick="deleteEntry('${entry.id}')" title="Excluir">
+                                🗑️
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+                <div style="text-align: center; margin-top: 20px; color: var(--text-light); font-size: 14px;">
+                    Mostrando ${entries.length} de ${db.entries[currentEmployee].length} registros
+                </div>
+            `;
+            
+            historyContent.innerHTML = html;
+            document.getElementById('history-count').textContent = db.entries[currentEmployee].length;
+        }
+
+        function editEntry(entryId) {
+            if (!currentEmployee) return;
+            
+            const entry = db.entries[currentEmployee].find(e => e.id === entryId);
+            if (!entry) return;
+            
+            currentEditingEntryId = entryId;
+            
+            document.getElementById('edit-employee-select').value = currentEmployee;
+            document.getElementById('edit-entry-date').value = entry.date;
+            document.getElementById('edit-entry-time').value = entry.entry || '09:00';
+            document.getElementById('edit-lunch-out-time').value = entry.lunchOut || '12:00';
+            document.getElementById('edit-lunch-in-time').value = entry.lunchIn || '13:00';
+            document.getElementById('edit-exit-time').value = entry.exit || '18:00';
+            
+            openModal('edit-entry-modal');
+        }
+
+        function saveEditedEntry() {
+            if (!currentEmployee || !currentEditingEntryId) return;
+            
+            const entryIndex = db.entries[currentEmployee].findIndex(e => e.id === currentEditingEntryId);
+            if (entryIndex === -1) return;
+            
+            const oldEntry = db.entries[currentEmployee][entryIndex];
+            const oldBalance = oldEntry.balanceMinutes || 0;
+            
+            const updatedEntry = {
+                ...oldEntry,
+                entry: document.getElementById('edit-entry-time').value,
+                lunchOut: document.getElementById('edit-lunch-out-time').value,
+                lunchIn: document.getElementById('edit-lunch-in-time').value,
+                exit: document.getElementById('edit-exit-time').value
+            };
+            
+            const newBalance = calculateDailyBalance(updatedEntry);
+            updatedEntry.balanceMinutes = newBalance;
+            updatedEntry.totalWorkedMinutes = Math.abs(newBalance) + (updatedEntry.expectedHours * 60);
+            
+            db.entries[currentEmployee][entryIndex] = updatedEntry;
+            
+            updateBalanceForEntry(currentEmployee, -oldBalance);
+            updateBalanceForEntry(currentEmployee, newBalance);
+            
+            saveData();
+            updateAllUIComponents(currentEmployee);
+            closeModal('edit-entry-modal');
+            showNotification('Lançamento atualizado com sucesso!', 'success');
+        }
+
+        function deleteCurrentEntry() {
+            if (!currentEmployee || !currentEditingEntryId) return;
+            deleteEntry(currentEditingEntryId);
+        }
+
+        function deleteEntry(entryId) {
+            if (!currentEmployee) return;
+            
+            if (!confirm('Tem certeza que deseja excluir este lançamento?')) {
+                return;
+            }
+            
+            const entryIndex = db.entries[currentEmployee].findIndex(e => e.id === entryId);
+            if (entryIndex === -1) return;
+            
+            const entry = db.entries[currentEmployee][entryIndex];
+            const balance = entry.balanceMinutes || 0;
+            
+            db.entries[currentEmployee].splice(entryIndex, 1);
+            
+            updateBalanceForEntry(currentEmployee, -balance);
+            
+            saveData();
+            updateAllUIComponents(currentEmployee);
+            showNotification('Lançamento excluído com sucesso!', 'success');
+        }
+
+        // Funções Adicionais
+        function addNewEmployee() {
+            const name = document.getElementById('new-employee-name').value.trim();
+            const code = document.getElementById('employee-code').value.trim();
+            const balance = document.getElementById('initial-balance').value.trim();
+            
+            if (!name) {
+                showNotification('Por favor, digite o nome do funcionário.', 'warning');
+                return;
+            }
+            
+            const employeeName = code ? `${code} - ${name}` : name;
+            
+            if (db.employees.includes(employeeName)) {
+                showNotification('Já existe um funcionário com este nome.', 'warning');
+                return;
+            }
+            
+            db.employees.push(employeeName);
+            db.employeeDetails[employeeName] = {
+                fullName: name,
+                code: code,
+                importDate: new Date().toISOString()
+            };
+            
+            db.entries[employeeName] = [];
+            db.positiveHours[employeeName] = 0;
+            db.negativeHours[employeeName] = 0;
+            
+            if (balance) {
+                const balanceMinutes = HHMMtoMinutes(balance);
+                if (balanceMinutes > 0) {
+                    db.positiveHours[employeeName] = balanceMinutes;
+                } else if (balanceMinutes < 0) {
+                    db.negativeHours[employeeName] = Math.abs(balanceMinutes);
+                }
+            }
+            
+            saveData();
+            updateEmployeeList();
+            selectEmployee(employeeName);
+            closeModal('add-employee-modal');
+            
+            showNotification('Funcionário adicionado com sucesso!', 'success');
+        }
+
+        function saveInitialBalance() {
+            const employee = document.getElementById('initial-balance-employee-select').value;
+            const positiveInput = document.getElementById('initial-positive-input').value;
+            const negativeInput = document.getElementById('initial-negative-input').value;
+            const description = document.getElementById('balance-description').value.trim();
+            
+            if (!employee) {
+                showNotification('Por favor, selecione um funcionário.', 'warning');
+                return;
+            }
+            
+            const positiveMinutes = HHMMtoMinutes(positiveInput) || 0;
+            const negativeMinutes = HHMMtoMinutes(negativeInput) || 0;
+            
+            db.positiveHours[employee] = Math.max(0, positiveMinutes);
+            db.negativeHours[employee] = Math.max(0, negativeMinutes);
+            
+            db.initialBalances[employee] = {
+                positive: positiveMinutes,
+                negative: negativeMinutes,
+                description: description,
+                date: new Date().toISOString()
+            };
+            
+            saveData();
+            updateAllUIComponents(employee);
+            closeModal('initial-balance-modal');
+            
+            showNotification('Saldo inicial configurado com sucesso!', 'success');
+        }
+
+        function toggleDarkMode() {
+            const isDark = document.getElementById('dark-mode-toggle').checked;
+            
+            if (isDark) {
+                document.body.classList.add('dark-mode');
+                db.settings.darkMode = true;
+            } else {
+                document.body.classList.remove('dark-mode');
+                db.settings.darkMode = false;
+            }
+            
+            saveData();
+        }
+
+        function resetUI() {
+            document.getElementById('employee-name-display').style.display = 'none';
+            
+            const resetValues = [
+                'current-balance', 'initial-balance-summary', 'monthly-overtime-summary',
+                'total-balance-summary', 'net-balance-summary', 'initial-balance-display',
+                'total-month-hours', 'month-overtime', 'total-balance'
+            ];
+            
+            resetValues.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.textContent = '00:00';
+            });
+            
+            document.getElementById('history-content').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">👤</div>
+                    <div class="empty-state-title">Selecione um funcionário</div>
+                    <div class="empty-state-text">Selecione um funcionário na barra lateral para ver os detalhes.</div>
+                </div>
+            `;
+            
+            document.getElementById('history-count').textContent = '0';
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                background: ${type === 'success' ? 'var(--success-color)' : 
+                            type === 'warning' ? 'var(--warning-color)' : 
+                            type === 'danger' ? 'var(--danger-color)' : 'var(--info-color)'};
+                color: white;
+                border-radius: var(--radius-sm);
+                box-shadow: var(--shadow-lg);
+                z-index: 10000;
+                animation: slideIn 0.3s ease-out;
+                max-width: 400px;
+            `;
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out forwards';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        function loadData() {
+            const savedDB = localStorage.getItem('overtimeProDB');
+            if (savedDB) {
+                const parsedDB = JSON.parse(savedDB);
+                
+                Object.assign(db, parsedDB);
+                
+                if (!db.employeeDetails) {
+                    db.employeeDetails = {};
+                    db.employees.forEach(employee => {
+                        db.employeeDetails[employee] = {
+                            fullName: employee,
+                            importDate: new Date().toISOString()
+                        };
+                    });
+                }
+                
+                if (!db.positiveHours) db.positiveHours = {};
+                if (!db.negativeHours) db.negativeHours = {};
+                if (!db.monthlyBalances) db.monthlyBalances = {};
+                if (!db.workdaySettings) db.workdaySettings = {
+                    dailyHours: 8,
+                    lunchDuration: 60,
+                    autoCalculateWorkdays: true,
+                    includeHolidays: true,
+                    includeCertificates: true,
+                    weekday: { start: '09:00', end: '18:00', lunch: 60, hours: 8 },
+                    saturday: { start: '09:00', end: '13:00', lunch: 0, hours: 4 },
+                    sunday: { start: '00:00', end: '00:00', lunch: 0, hours: 0 }
+                };
+                if (!db.monthlyWorkdays) db.monthlyWorkdays = {};
+                if (!db.holidays) db.holidays = {};
+                if (!db.medicalCertificates) db.medicalCertificates = {};
+                
+                if (db.settings.darkMode) {
+                    document.body.classList.add('dark-mode');
+                    document.getElementById('dark-mode-toggle').checked = true;
+                }
+                
+                updateEmployeeList();
+                if (db.employees.length > 0) {
+                    selectEmployee(db.employees[0]);
+                }
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('overtimeProDB', JSON.stringify(db));
+        }
+
+        function previewCalculation() {
+            const entry = {
+                entry: document.getElementById('modal-entry-time').value,
+                lunchOut: document.getElementById('modal-lunch-out-time').value,
+                lunchIn: document.getElementById('modal-lunch-in-time').value,
+                exit: document.getElementById('modal-exit-time').value
+            };
+            
+            if (!entry.entry || !entry.lunchOut || !entry.lunchIn || !entry.exit) {
+                return;
+            }
+            
+            const dateStr = document.getElementById('modal-entry-date').value;
+            const employee = document.getElementById('modal-employee-select').value;
+            const dayType = getDayType(dateStr);
+            
+            updateDayTypeIndicator();
+            
+            const hasCertificate = employee && isDateAffectedByCertificate(employee, dateStr);
+            
+            const balanceMinutes = calculateDailyBalance({
+                ...entry,
+                date: dateStr,
+                employee: employee
+            });
+            
+            const totalWorkedMinutes = Math.abs(balanceMinutes) + (dayType.hours * 60);
+            
+            document.getElementById('preview-total').textContent = minutesToHHMM(totalWorkedMinutes);
+            document.getElementById('preview-expected').textContent = `${dayType.hours}:00`;
+            document.getElementById('preview-overtime').textContent = 
+                balanceMinutes > 0 ? `+${minutesToHHMM(balanceMinutes)}` : 
+                balanceMinutes < 0 ? `${minutesToHHMM(balanceMinutes)}` : '00:00';
+            
+            const previewResult = document.getElementById('preview-result');
+            const resultText = document.getElementById('preview-result-text');
+            const analysisText = document.getElementById('preview-analysis');
+            
+            if (hasCertificate) {
+                resultText.textContent = `Atestado - ${minutesToHHMM(totalWorkedMinutes)} extras`;
+                previewResult.className = 'preview-result positive';
+                analysisText.textContent = '🏥 Dia com atestado médico - horas trabalhadas são extras';
+                analysisText.style.color = 'var(--info-color)';
+            } else if (dayType.type === 'holiday' && dayType.hours === 0) {
+                resultText.textContent = 'Feriado - Folga';
+                previewResult.className = 'preview-result';
+                analysisText.textContent = '🎉 Feriado nacional - dia de folga';
+                analysisText.style.color = 'var(--accent-color)';
+            } else if (dayType.type === 'sunday' && dayType.hours === 0) {
+                resultText.textContent = 'Domingo - Folga';
+                previewResult.className = 'preview-result';
+                analysisText.textContent = '🌅 Domingo - dia de folga';
+                analysisText.style.color = 'var(--danger-color)';
+            } else if (balanceMinutes > 0) {
+                resultText.textContent = `+${minutesToHHMM(balanceMinutes)} extras`;
+                previewResult.className = 'preview-result positive';
+                analysisText.textContent = '✅ Horas extras trabalhadas';
+                analysisText.style.color = 'var(--positive-color)';
+            } else if (balanceMinutes < 0) {
+                resultText.textContent = `${minutesToHHMM(balanceMinutes)} falta`;
+                previewResult.className = 'preview-result negative';
+                analysisText.textContent = '⚠️ Horas em falta';
+                analysisText.style.color = 'var(--negative-color)';
+            } else {
+                resultText.textContent = 'Horas normais';
+                previewResult.className = 'preview-result';
+                analysisText.textContent = '✓ Jornada completa';
+                analysisText.style.color = 'var(--neutral-color)';
+            }
+            
+            document.getElementById('entry-preview').style.display = 'block';
         }
 
         // Feriados functions
@@ -3134,11 +4392,9 @@
                 { date: `${year}-12-25`, description: 'Natal', type: 'holiday' }
             ];
             
-            // Add Carnival (mobile holiday)
             const carnivalDate = calculateCarnivalDate(year);
             holidays.push({ date: carnivalDate, description: 'Carnaval', type: 'holiday' });
             
-            // Add Good Friday
             const goodFriday = calculateGoodFriday(year);
             holidays.push({ date: goodFriday, description: 'Sexta-Feira Santa', type: 'holiday' });
             
@@ -3159,7 +4415,6 @@
         }
 
         function calculateCarnivalDate(year) {
-            // Carnival is 47 days before Easter
             const easter = calculateEasterDate(year);
             const carnival = new Date(easter);
             carnival.setDate(easter.getDate() - 47);
@@ -3167,7 +4422,6 @@
         }
 
         function calculateGoodFriday(year) {
-            // Good Friday is 2 days before Easter
             const easter = calculateEasterDate(year);
             const goodFriday = new Date(easter);
             goodFriday.setDate(easter.getDate() - 2);
@@ -3175,7 +4429,6 @@
         }
 
         function calculateEasterDate(year) {
-            // Anonymous Gregorian algorithm
             const a = year % 19;
             const b = Math.floor(year / 100);
             const c = year % 100;
@@ -3275,7 +4528,6 @@
                 db.holidays[year] = [];
             }
             
-            // Check if holiday already exists
             if (db.holidays[year].some(h => h.date === date)) {
                 showNotification('Já existe um feriado registrado para esta data.', 'warning');
                 return;
@@ -3387,7 +4639,6 @@
                 db.medicalCertificates[employee] = [];
             }
             
-            // Calculate affected hours
             let totalHours = 0;
             const currentDate = new Date(start);
             const affectedDates = [];
@@ -3422,7 +4673,6 @@
             db.medicalCertificates[employee].push(certificate);
             db.medicalCertificates[employee].sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
             
-            // Update negative hours balance
             if (db.workdaySettings.includeCertificates) {
                 db.negativeHours[employee] = (db.negativeHours[employee] || 0) + (totalHours * 60);
             }
@@ -3489,7 +4739,6 @@
                 if (index > -1) {
                     const certificate = certificates[index];
                     
-                    // Restore negative hours balance
                     if (db.workdaySettings.includeCertificates) {
                         db.negativeHours[employee] = Math.max(0, (db.negativeHours[employee] || 0) - (certificate.totalHours * 60));
                     }
@@ -3504,197 +4753,7 @@
             }
         }
 
-        function isDateAffectedByCertificate(employee, dateStr) {
-            if (!db.workdaySettings.includeCertificates || !db.medicalCertificates[employee]) {
-                return false;
-            }
-            
-            return db.medicalCertificates[employee].some(certificate => {
-                return certificate.status === 'active' && 
-                       certificate.affectedDates.includes(dateStr);
-            });
-        }
-
-        // Time calculations - Updated to consider day type
-        function calculateDailyBalance(entry) {
-            const dateStr = entry.date;
-            const dayType = getDayType(dateStr);
-            const expectedHours = dayType.hours;
-            
-            const entryMin = timeToMinutes(entry.entry);
-            const lunchOutMin = timeToMinutes(entry.lunchOut);
-            const lunchInMin = timeToMinutes(entry.lunchIn);
-            const exitMin = timeToMinutes(entry.exit);
-            
-            // Calculate worked time
-            const morningWork = Math.max(0, lunchOutMin - entryMin);
-            const afternoonWork = Math.max(0, exitMin - lunchInMin);
-            const totalWorked = morningWork + afternoonWork;
-            
-            // Check if date is affected by medical certificate
-            if (entry.employee && isDateAffectedByCertificate(entry.employee, dateStr)) {
-                // For certificate days, expected hours are 0
-                return totalWorked; // All worked hours are considered extra
-            }
-            
-            // Calculate balance (positive = extra, negative = falta)
-            const expectedMinutes = expectedHours * 60;
-            return totalWorked - expectedMinutes;
-        }
-
-        // Preview calculation - Updated
-        function previewCalculation() {
-            const entry = {
-                entry: document.getElementById('modal-entry-time').value,
-                lunchOut: document.getElementById('modal-lunch-out-time').value,
-                lunchIn: document.getElementById('modal-lunch-in-time').value,
-                exit: document.getElementById('modal-exit-time').value
-            };
-            
-            if (!entry.entry || !entry.lunchOut || !entry.lunchIn || !entry.exit) {
-                return;
-            }
-            
-            // Get date and employee for day type calculation
-            const dateStr = document.getElementById('modal-entry-date').value;
-            const employee = document.getElementById('modal-employee-select').value;
-            const dayType = getDayType(dateStr);
-            
-            // Update day type indicator
-            updateDayTypeIndicator();
-            
-            // Check if date is affected by certificate
-            const hasCertificate = employee && isDateAffectedByCertificate(employee, dateStr);
-            
-            const balanceMinutes = calculateDailyBalance({
-                ...entry,
-                date: dateStr,
-                employee: employee
-            });
-            
-            const totalWorkedMinutes = Math.abs(balanceMinutes) + (dayType.hours * 60);
-            
-            // Update preview
-            document.getElementById('preview-total').textContent = minutesToHHMM(totalWorkedMinutes);
-            document.getElementById('preview-expected').textContent = `${dayType.hours}:00`;
-            document.getElementById('preview-overtime').textContent = 
-                balanceMinutes > 0 ? `+${minutesToHHMM(balanceMinutes)}` : 
-                balanceMinutes < 0 ? `${minutesToHHMM(balanceMinutes)}` : '00:00';
-            
-            const previewResult = document.getElementById('preview-result');
-            const resultText = document.getElementById('preview-result-text');
-            const analysisText = document.getElementById('preview-analysis');
-            
-            if (hasCertificate) {
-                resultText.textContent = `Atestado - ${minutesToHHMM(totalWorkedMinutes)} extras`;
-                previewResult.className = 'preview-result positive';
-                analysisText.textContent = '🏥 Dia com atestado médico - horas trabalhadas são extras';
-                analysisText.style.color = 'var(--info-color)';
-            } else if (dayType.type === 'holiday' && dayType.hours === 0) {
-                resultText.textContent = 'Feriado - Folga';
-                previewResult.className = 'preview-result';
-                analysisText.textContent = '🎉 Feriado nacional - dia de folga';
-                analysisText.style.color = 'var(--accent-color)';
-            } else if (dayType.type === 'sunday' && dayType.hours === 0) {
-                resultText.textContent = 'Domingo - Folga';
-                previewResult.className = 'preview-result';
-                analysisText.textContent = '🌅 Domingo - dia de folga';
-                analysisText.style.color = 'var(--danger-color)';
-            } else if (balanceMinutes > 0) {
-                resultText.textContent = `+${minutesToHHMM(balanceMinutes)} extras`;
-                previewResult.className = 'preview-result positive';
-                analysisText.textContent = '✅ Horas extras trabalhadas';
-                analysisText.style.color = 'var(--positive-color)';
-            } else if (balanceMinutes < 0) {
-                resultText.textContent = `${minutesToHHMM(balanceMinutes)} falta`;
-                previewResult.className = 'preview-result negative';
-                analysisText.textContent = '⚠️ Horas em falta';
-                analysisText.style.color = 'var(--negative-color)';
-            } else {
-                resultText.textContent = 'Horas normais';
-                previewResult.className = 'preview-result';
-                analysisText.textContent = '✓ Jornada completa';
-                analysisText.style.color = 'var(--neutral-color)';
-            }
-            
-            // Show preview
-            document.getElementById('entry-preview').style.display = 'block';
-        }
-
-        // Save time entry - Updated
-        function calculateAndSaveEntry() {
-            const employee = document.getElementById('modal-employee-select').value;
-            const date = document.getElementById('modal-entry-date').value;
-            const entry = document.getElementById('modal-entry-time').value;
-            const lunchOut = document.getElementById('modal-lunch-out-time').value;
-            const lunchIn = document.getElementById('modal-lunch-in-time').value;
-            const exit = document.getElementById('modal-exit-time').value;
-            
-            if (!employee || !date || !entry || !lunchOut || !lunchIn || !exit) {
-                showNotification('Por favor, preencha todos os campos.', 'warning');
-                return;
-            }
-            
-            const dayType = getDayType(date);
-            const hasCertificate = isDateAffectedByCertificate(employee, date);
-            
-            const balanceMinutes = calculateDailyBalance({
-                date, entry, lunchOut, lunchIn, exit, employee
-            });
-            
-            const expectedHours = hasCertificate ? 0 : dayType.hours;
-            const totalWorkedMinutes = Math.abs(balanceMinutes) + (expectedHours * 60);
-            
-            const newEntry = {
-                id: Date.now().toString(),
-                date,
-                entry,
-                lunchOut,
-                lunchIn,
-                exit,
-                totalWorkedMinutes,
-                balanceMinutes,
-                dayType: dayType.type,
-                expectedHours: expectedHours,
-                hasCertificate: hasCertificate
-            };
-            
-            if (!db.entries[employee]) {
-                db.entries[employee] = [];
-            }
-            
-            // Check for duplicate date
-            const existingIndex = db.entries[employee].findIndex(e => e.date === date);
-            if (existingIndex > -1) {
-                if (confirm('Já existe um lançamento para esta data. Deseja substituir?')) {
-                    // Remove old balance before adding new one
-                    const oldBalance = db.entries[employee][existingIndex].balanceMinutes;
-                    updateBalanceForEntry(employee, -oldBalance); // Remove old balance
-                    
-                    db.entries[employee][existingIndex] = newEntry;
-                } else {
-                    return;
-                }
-            } else {
-                db.entries[employee].push(newEntry);
-            }
-            
-            // Update balance
-            updateBalanceForEntry(employee, balanceMinutes);
-            
-            // Sort entries by date
-            db.entries[employee].sort((a, b) => new Date(a.date) - new Date(b.date));
-            
-            saveData();
-            
-            // Update UI
-            updateAllUIComponents(employee);
-            
-            closeModal('time-entry-modal');
-            showNotification('Horários lançados com sucesso!', 'success');
-        }
-
-        // Balance analysis - Updated to show special considerations
+        // Balance analysis
         function updateBalanceAnalysis() {
             const employee = document.getElementById('analysis-employee-select').value;
             if (!employee) return;
@@ -3709,10 +4768,7 @@
             document.getElementById('analysis-negative-balance').textContent = minutesToHHMM(negativeHours);
             document.getElementById('analysis-net-balance').textContent = minutesToHHMM(netBalance);
             
-            // Update special considerations
             updateSpecialConsiderations(employee);
-            
-            // Update monthly breakdown
             updateMonthlyBreakdown(employee);
         }
 
@@ -3720,7 +4776,6 @@
             const container = document.getElementById('special-considerations');
             let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
             
-            // Check for medical certificates
             if (db.medicalCertificates[employee] && db.medicalCertificates[employee].length > 0) {
                 const totalCertificateHours = db.medicalCertificates[employee].reduce((sum, cert) => sum + cert.totalHours, 0);
                 html += `
@@ -3736,7 +4791,6 @@
                 `;
             }
             
-            // Check for holidays in current month
             const today = new Date();
             const year = today.getFullYear();
             const month = today.getMonth() + 1;
@@ -3762,7 +4816,6 @@
                 }
             }
             
-            // Check for weekend work
             const entries = db.entries[employee] || [];
             const weekendWork = entries.filter(entry => {
                 const date = new Date(entry.date);
@@ -3788,6 +4841,52 @@
             container.innerHTML = html;
         }
 
+        function updateMonthlyBreakdown(employee) {
+            const container = document.getElementById('monthly-breakdown');
+            
+            if (!db.monthlyBalances[employee] || Object.keys(db.monthlyBalances[employee]).length === 0) {
+                container.innerHTML = '<p style="color: var(--text-light); text-align: center; padding: 20px;">Nenhum dado mensal disponível</p>';
+                return;
+            }
+            
+            let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+            
+            Object.entries(db.monthlyBalances[employee])
+                .sort(([a], [b]) => b.localeCompare(a))
+                .forEach(([month, data]) => {
+                    html += `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--card-bg); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                            <div style="font-weight: 600;">${formatMonth(month)}</div>
+                            <div style="display: flex; gap: 15px;">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 11px; color: var(--text-light);">Extras</div>
+                                    <div style="color: var(--positive-color); font-weight: 600;">${minutesToHHMM(data.positive)}</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 11px; color: var(--text-light);">Falta</div>
+                                    <div style="color: var(--negative-color); font-weight: 600;">${minutesToHHMM(data.negative)}</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 11px; color: var(--text-light);">Saldo</div>
+                                    <div style="font-weight: 600; color: ${data.net >= 0 ? 'var(--positive-color)' : 'var(--negative-color)'}">
+                                        ${minutesToHHMM(data.net)}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function formatMonth(monthStr) {
+            const [year, month] = monthStr.split('-');
+            const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            return `${monthNames[parseInt(month) - 1]}/${year}`;
+        }
+
         // Settings
         function saveSettings() {
             db.workdaySettings.dailyHours = parseFloat(document.getElementById('daily-hours').value) || 8;
@@ -3796,7 +4895,6 @@
             db.workdaySettings.includeHolidays = document.getElementById('include-holidays-in-calculation').checked;
             db.workdaySettings.includeCertificates = document.getElementById('include-medical-certificates').checked;
             
-            // Recalculate workdays if auto-calculate is enabled
             if (db.workdaySettings.autoCalculateWorkdays) {
                 const today = new Date();
                 const year = today.getFullYear();
@@ -3812,108 +4910,174 @@
             closeModal('settings-modal');
         }
 
-        // Utility functions
-        function timeToMinutes(timeStr) {
-            if (!timeStr) return 0;
-            const [hours, minutes] = timeStr.split(':').map(Number);
-            return hours * 60 + minutes;
-        }
-
-        function minutesToHHMM(totalMinutes) {
-            if (isNaN(totalMinutes)) return "00:00";
+        // Export functions
+        function exportToPDF() {
+            if (!currentEmployee) {
+                showNotification('Selecione um funcionário primeiro.', 'warning');
+                return;
+            }
             
-            const sign = totalMinutes < 0 ? '-' : '';
-            const absMinutes = Math.abs(totalMinutes);
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
             
-            const hours = Math.floor(absMinutes / 60);
-            const minutes = Math.round(absMinutes % 60);
-            return `${sign}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+            doc.setFontSize(20);
+            doc.text('Relatório de Horas Extras', 20, 20);
+            
+            doc.setFontSize(12);
+            doc.text(`Funcionário: ${currentEmployee}`, 20, 35);
+            doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 20, 42);
+            
+            const positiveHours = getPositiveHours(currentEmployee);
+            const negativeHours = getNegativeHours(currentEmployee);
+            const totalBalance = positiveHours - negativeHours;
+            
+            doc.setFontSize(14);
+            doc.text('Resumo do Saldo:', 20, 55);
+            
+            doc.setFontSize(12);
+            doc.text(`Horas Extras: ${minutesToHHMM(positiveHours)}`, 30, 65);
+            doc.text(`Horas em Falta: ${minutesToHHMM(negativeHours)}`, 30, 72);
+            doc.text(`Saldo Total: ${minutesToHHMM(totalBalance)}`, 30, 79);
+            
+            doc.setFontSize(14);
+            doc.text('Histórico de Lançamentos:', 20, 95);
+            
+            if (db.entries[currentEmployee] && db.entries[currentEmployee].length > 0) {
+                const tableData = db.entries[currentEmployee].map(entry => [
+                    formatDate(entry.date),
+                    entry.entry || '-',
+                    entry.lunchOut || '-',
+                    entry.lunchIn || '-',
+                    entry.exit || '-',
+                    minutesToHHMM(entry.totalWorkedMinutes || 0),
+                    minutesToHHMM(entry.balanceMinutes || 0)
+                ]);
+                
+                doc.autoTable({
+                    startY: 100,
+                    head: [['Data', 'Entrada', 'Saída Almoço', 'Retorno', 'Saída', 'Total', 'Balanço']],
+                    body: tableData,
+                    theme: 'striped',
+                    headStyles: { fillColor: [156, 39, 176] }
+                });
+            }
+            
+            doc.save(`relatorio_horas_${currentEmployee.replace(/\s+/g, '_')}.pdf`);
+            showNotification('PDF exportado com sucesso!', 'success');
         }
 
-        function HHMMtoMinutes(hhmm) {
-            if (!hhmm) return 0;
-            const sign = hhmm.startsWith('-') ? -1 : 1;
-            const time = hhmm.replace(/[+-]/, '');
-            const [hours, minutes] = time.split(':').map(Number);
-            return sign * (hours * 60 + minutes);
+        function exportBalanceAnalysis() {
+            const employee = document.getElementById('analysis-employee-select').value;
+            if (!employee) {
+                showNotification('Selecione um funcionário primeiro.', 'warning');
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(20);
+            doc.text('Análise de Saldo de Horas', 20, 20);
+            
+            doc.setFontSize(12);
+            doc.text(`Funcionário: ${employee}`, 20, 35);
+            doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 20, 42);
+            
+            const positiveHours = getPositiveHours(employee);
+            const negativeHours = getNegativeHours(employee);
+            const totalBalance = positiveHours - negativeHours;
+            
+            doc.setFontSize(14);
+            doc.text('Saldo Atual:', 20, 55);
+            
+            doc.setFontSize(12);
+            doc.text(`Horas Positivas: ${minutesToHHMM(positiveHours)}`, 30, 65);
+            doc.text(`Horas Negativas: ${minutesToHHMM(negativeHours)}`, 30, 72);
+            doc.text(`Saldo Líquido: ${minutesToHHMM(totalBalance)}`, 30, 79);
+            
+            if (db.monthlyBalances[employee]) {
+                doc.setFontSize(14);
+                doc.text('Detalhamento por Mês:', 20, 95);
+                
+                const tableData = Object.entries(db.monthlyBalances[employee])
+                    .sort(([a], [b]) => b.localeCompare(a))
+                    .map(([month, data]) => [
+                        formatMonth(month),
+                        minutesToHHMM(data.positive),
+                        minutesToHHMM(data.negative),
+                        minutesToHHMM(data.net)
+                    ]);
+                
+                doc.autoTable({
+                    startY: 100,
+                    head: [['Mês', 'Horas Extras', 'Horas Falta', 'Saldo']],
+                    body: tableData,
+                    theme: 'striped',
+                    headStyles: { fillColor: [156, 39, 176] }
+                });
+            }
+            
+            doc.save(`analise_saldo_${employee.replace(/\s+/g, '_')}.pdf`);
+            showNotification('Análise exportada com sucesso!', 'success');
         }
 
-        function formatDate(dateStr) {
-            if (!dateStr) return '';
-            const [y, m, d] = dateStr.split('-');
-            return `${d}/${m}/${y}`;
+        function exportBackup() {
+            const dataStr = JSON.stringify(db, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `backup_horas_${new Date().toISOString().slice(0, 10)}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            showNotification('Backup exportado com sucesso!', 'success');
         }
 
-        // Keep all other existing functions from the original code
-        // (loadData, saveData, updateEmployeeList, handleEmployeeClick, selectEmployee,
-        // updateBalanceDetails, updateDetailedBalanceCards, getPositiveHours, getNegativeHours,
-        // updateBalanceForEntry, updateMonthlyBalance, calculateTotalBalance, calculateNetBalance,
-        // calculateCurrentMonthOvertime, updateAllUIComponents, addNewEmployee, refreshHistory,
-        // updateStatistics, updateInitialBalanceDisplay, updateChangeIndicators, editEntry,
-        // saveEditedEntry, deleteCurrentEntry, deleteEntry, saveInitialBalance,
-        // exportBalanceAnalysis, exportToPDF, exportBackup, clearSystem, toggleDarkMode,
-        // showNotification, updateUI, handleFileSelect, clearSelectedFile, formatFileSize,
-        // previewExcelData, parseExcelData, formatTimeValue, processExcelFile)
-
-        // Note: Due to character limits, I've implemented the core new functionality.
-        // The existing functions from the original code should remain as they were.
-        // The key additions are the workday settings, holidays, and medical certificates management.
-
-        // Initialize database with new structure
-        function loadData() {
-            const savedDB = localStorage.getItem('overtimeProDB');
-            if (savedDB) {
-                const parsedDB = JSON.parse(savedDB);
-                db = parsedDB;
-                
-                // Backward compatibility
-                if (!db.employeeDetails) {
-                    db.employeeDetails = {};
-                    db.employees.forEach(employee => {
-                        db.employeeDetails[employee] = {
-                            fullName: employee,
-                            importDate: new Date().toISOString()
-                        };
-                    });
-                }
-                
-                if (!db.positiveHours) db.positiveHours = {};
-                if (!db.negativeHours) db.negativeHours = {};
-                if (!db.monthlyBalances) db.monthlyBalances = {};
-                if (!db.workdaySettings) db.workdaySettings = {
-                    dailyHours: 8,
-                    lunchDuration: 60,
-                    autoCalculateWorkdays: true,
-                    includeHolidays: true,
-                    includeCertificates: true,
-                    weekday: { start: '09:00', end: '18:00', lunch: 60, hours: 8 },
-                    saturday: { start: '09:00', end: '13:00', lunch: 0, hours: 4 },
-                    sunday: { start: '00:00', end: '00:00', lunch: 0, hours: 0 }
-                };
-                if (!db.monthlyWorkdays) db.monthlyWorkdays = {};
-                if (!db.holidays) db.holidays = {};
-                if (!db.medicalCertificates) db.medicalCertificates = {};
-                
-                // Apply dark mode if enabled
-                if (db.settings.darkMode) {
-                    document.body.classList.add('dark-mode');
-                    document.getElementById('dark-mode-toggle').checked = true;
-                }
-                
-                updateEmployeeList();
-                if (db.employees.length > 0) {
-                    selectEmployee(db.employees[0]);
-                }
+        function clearSystem() {
+            if (confirm('Tem certeza que deseja limpar TODOS os dados do sistema? Esta ação não pode ser desfeita.')) {
+                localStorage.removeItem('overtimeProDB');
+                location.reload();
             }
         }
 
-        function saveData() {
-            localStorage.setItem('overtimeProDB', JSON.stringify(db));
+        // Initialize the system
+        loadData();
+        
+        if (typeof window !== 'undefined') {
+            window.showNotification = showNotification;
+            window.openModal = openModal;
+            window.closeModal = closeModal;
+            window.refreshHistory = refreshHistory;
+            window.exportToPDF = exportToPDF;
+            window.exportBalanceAnalysis = exportBalanceAnalysis;
+            window.exportBackup = exportBackup;
+            window.clearSystem = clearSystem;
+            window.addNewEmployee = addNewEmployee;
+            window.saveInitialBalance = saveInitialBalance;
+            window.calculateAndSaveEntry = calculateAndSaveEntry;
+            window.previewCalculation = previewCalculation;
+            window.editEntry = editEntry;
+            window.saveEditedEntry = saveEditedEntry;
+            window.deleteCurrentEntry = deleteCurrentEntry;
+            window.deleteEntry = deleteEntry;
+            window.handleFileSelect = handleFileSelect;
+            window.clearSelectedFile = clearSelectedFile;
+            window.previewExcelData = previewExcelData;
+            window.processExcelFile = processExcelFile;
+            window.saveWorkdaySettings = saveWorkdaySettings;
+            window.addNationalHolidays = addNationalHolidays;
+            window.addHoliday = addHoliday;
+            window.deleteHoliday = deleteHoliday;
+            window.loadHolidaysForYear = loadHolidaysForYear;
+            window.saveMedicalCertificate = saveMedicalCertificate;
+            window.calculateCertificateImpact = calculateCertificateImpact;
+            window.loadEmployeeCertificates = loadEmployeeCertificates;
+            window.deleteMedicalCertificate = deleteMedicalCertificate;
+            window.updateBalanceAnalysis = updateBalanceAnalysis;
+            window.saveSettings = saveSettings;
         }
-
-        // Update the rest of the existing functions to work with the new structure
-        // These should remain largely the same as in the original code
-        // ... [rest of the existing functions] ...
     </script>
 </body>
 </html>
