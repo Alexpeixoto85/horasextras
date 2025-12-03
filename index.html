@@ -2613,6 +2613,8 @@
             
             document.getElementById('certificate-start-date')?.addEventListener('change', calculateCertificateImpact);
             document.getElementById('certificate-end-date')?.addEventListener('change', calculateCertificateImpact);
+            
+            document.getElementById('modal-entry-date')?.addEventListener('change', updateDayTypeIndicator);
         }
 
         // Modal Management
@@ -2855,7 +2857,7 @@
             document.getElementById('holiday-end').value = '00:00';
         }
 
-        // Funções de Dias Úteis e Feriados - CORRIGIDAS
+        // CORREÇÃO: Funções de Dias Úteis e Feriados - Corrigidas
         function updateWorkdaySettingsForm() {
             const monthYear = document.getElementById('workday-config-month').value;
             if (!monthYear) return;
@@ -2873,20 +2875,27 @@
             
             document.getElementById('working-days-input').value = workdays;
             
-            // Atualizar os valores dos campos de horários
-            document.getElementById('weekday-start').value = db.workdaySettings.weekday.start;
-            document.getElementById('weekday-end').value = db.workdaySettings.weekday.end;
-            document.getElementById('weekday-lunch').value = db.workdaySettings.weekday.lunch;
+            // Atualizar os valores dos campos de horários com os valores salvos
+            if (db.workdaySettings.weekday) {
+                document.getElementById('weekday-start').value = db.workdaySettings.weekday.start || '09:00';
+                document.getElementById('weekday-end').value = db.workdaySettings.weekday.end || '18:00';
+                document.getElementById('weekday-lunch').value = db.workdaySettings.weekday.lunch || 60;
+            }
             
-            document.getElementById('saturday-start').value = db.workdaySettings.saturday.start;
-            document.getElementById('saturday-end').value = db.workdaySettings.saturday.end;
-            document.getElementById('saturday-lunch').value = db.workdaySettings.saturday.lunch;
+            if (db.workdaySettings.saturday) {
+                document.getElementById('saturday-start').value = db.workdaySettings.saturday.start || '09:00';
+                document.getElementById('saturday-end').value = db.workdaySettings.saturday.end || '13:00';
+                document.getElementById('saturday-lunch').value = db.workdaySettings.saturday.lunch || 0;
+            }
             
-            document.getElementById('sunday-start').value = db.workdaySettings.sunday.start;
-            document.getElementById('sunday-end').value = db.workdaySettings.sunday.end;
-            document.getElementById('sunday-lunch').value = db.workdaySettings.sunday.lunch;
+            if (db.workdaySettings.sunday) {
+                document.getElementById('sunday-start').value = db.workdaySettings.sunday.start || '00:00';
+                document.getElementById('sunday-end').value = db.workdaySettings.sunday.end || '00:00';
+                document.getElementById('sunday-lunch').value = db.workdaySettings.sunday.lunch || 0;
+            }
         }
 
+        // CORREÇÃO: Função corrigida para calcular dias úteis
         function calculateWorkdaysForMonth(year, month) {
             if (!db.workdaySettings.autoCalculateWorkdays) {
                 return 22; // Valor padrão
@@ -2904,7 +2913,7 @@
                     continue; // Pular finais de semana
                 }
                 
-                const dateStr = date.toISOString().split('T')[0];
+                const dateStr = formatDateForStorage(date);
                 if (isHoliday(dateStr)) {
                     continue; // Pular feriados
                 }
@@ -2915,6 +2924,7 @@
             return workdays;
         }
 
+        // CORREÇÃO: Função corrigida para verificar feriados
         function isHoliday(dateStr) {
             if (!db.workdaySettings.includeHolidays || !db.holidays) {
                 return false;
@@ -2924,12 +2934,25 @@
             const year = date.getFullYear();
             
             if (db.holidays[year]) {
-                return db.holidays[year].some(holiday => holiday.date === dateStr);
+                return db.holidays[year].some(holiday => {
+                    // Verificar se a data do feriado corresponde à data fornecida
+                    const holidayDate = new Date(holiday.date);
+                    return holidayDate.getTime() === date.getTime();
+                });
             }
             
             return false;
         }
 
+        // CORREÇÃO: Função para formatar data para armazenamento
+        function formatDateForStorage(date) {
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const dd = String(date.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        // CORREÇÃO: Função para obter tipo de dia corrigida
         function getDayType(dateStr) {
             const date = new Date(dateStr);
             const dayOfWeek = date.getDay(); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
@@ -2937,7 +2960,10 @@
             // Verificar se é feriado primeiro
             if (isHoliday(dateStr)) {
                 const year = date.getFullYear();
-                const holiday = db.holidays[year]?.find(h => h.date === dateStr);
+                const holiday = db.holidays[year]?.find(h => {
+                    const holidayDate = new Date(h.date);
+                    return holidayDate.getTime() === date.getTime();
+                });
                 return {
                     type: 'holiday',
                     name: holiday?.description || 'Feriado',
@@ -2951,19 +2977,19 @@
                     return {
                         type: 'sunday',
                         name: 'Domingo',
-                        hours: db.workdaySettings.sunday.hours
+                        hours: db.workdaySettings.sunday.hours || 0
                     };
                 case 6: // Sábado
                     return {
                         type: 'saturday',
                         name: 'Sábado',
-                        hours: db.workdaySettings.saturday.hours
+                        hours: db.workdaySettings.saturday.hours || 4
                     };
                 default: // Dias úteis (Segunda a Sexta)
                     return {
                         type: 'weekday',
                         name: 'Dia Útil',
-                        hours: db.workdaySettings.weekday.hours
+                        hours: db.workdaySettings.weekday.hours || 8
                     };
             }
         }
@@ -3006,6 +3032,7 @@
             indicator.style.display = 'block';
         }
 
+        // CORREÇÃO: Função para salvar configurações de dias úteis
         function saveWorkdaySettings() {
             const monthYear = document.getElementById('workday-config-month').value;
             if (!monthYear) {
@@ -3056,6 +3083,9 @@
             // Salvar também a jornada diária padrão
             db.workdaySettings.dailyHours = db.workdaySettings.weekday.hours;
             
+            // Salvar mês/ano de configuração
+            db.workdaySettings.currentMonthConfig = monthKey;
+            
             saveData();
             updateWorkdayInfo();
             closeModal('workday-settings-modal');
@@ -3084,8 +3114,11 @@
             
             document.getElementById('working-days-count').textContent = workdays;
             
-            // Contar feriados
-            const holidaysCount = db.holidays[year] ? db.holidays[year].length : 0;
+            // Contar feriados para o ano atual
+            let holidaysCount = 0;
+            if (db.holidays[year]) {
+                holidaysCount = db.holidays[year].length;
+            }
             document.getElementById('holidays-count').textContent = holidaysCount;
             
             // Contar atestados
@@ -3098,8 +3131,10 @@
             document.getElementById('medical-certificates-count').textContent = certificatesCount;
             
             // Calcular horas esperadas
-            const expectedHours = workdays * db.workdaySettings.weekday.hours;
-            document.getElementById('expected-month-hours').textContent = `${Math.floor(expectedHours)}:${String(Math.round((expectedHours % 1) * 60)).padStart(2, '0')}`;
+            const expectedHours = workdays * (db.workdaySettings.weekday.hours || 8);
+            const hours = Math.floor(expectedHours);
+            const minutes = Math.round((expectedHours % 1) * 60);
+            document.getElementById('expected-month-hours').textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
             
             // Atualizar informações de configuração
             const configMonth = document.getElementById('workday-config-month').value;
@@ -3338,7 +3373,7 @@
             const afternoonWork = Math.max(0, exitMin - lunchInMin);
             const totalWorked = morningWork + afternoonWork;
             
-            const expectedMinutes = db.workdaySettings.dailyHours * 60;
+            const expectedMinutes = (db.workdaySettings.dailyHours || 8) * 60;
             const balance = totalWorked - expectedMinutes;
             
             return minutesToHHMM(balance);
