@@ -1471,6 +1471,18 @@
             background: rgba(231, 76, 60, 0.1);
             color: var(--danger-color);
         }
+
+        /* Folga Item */
+        .dayoff-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 8px 0;
+            background: linear-gradient(135deg, rgba(155, 89, 182, 0.1), rgba(155, 89, 182, 0.05));
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(155, 89, 182, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -1508,6 +1520,10 @@
                 </button>
                 <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="openModal('workday-settings-modal')">
                     📅 Dias Úteis & Feriados
+                </button>
+                <!-- NOVO: Botão para cadastro de folga -->
+                <button class="btn btn-accent" style="width: 100%; margin-top: 10px;" onclick="openModal('dayoff-modal')">
+                    🏖️ Registrar Folga
                 </button>
             </div>
 
@@ -1634,6 +1650,15 @@
                         </div>
                     </div>
                     
+                    <!-- NOVO: Contador de folgas -->
+                    <div class="balance-item">
+                        <div class="balance-label">Folgas Registradas</div>
+                        <div class="balance-value" id="daysoff-count">0</div>
+                        <div class="balance-details">
+                            <span class="balance-detail-item" id="daysoff-list">Ver lista</span>
+                        </div>
+                    </div>
+                    
                     <div class="balance-item">
                         <div class="balance-label">Jornada Total Esperada</div>
                         <div class="balance-value" id="expected-month-hours">00:00</div>
@@ -1649,6 +1674,10 @@
                     </button>
                     <button class="btn btn-warning" onclick="openModal('holiday-management-modal')">
                         🎉 Gerenciar Feriados
+                    </button>
+                    <!-- NOVO: Botão para gerenciar folgas -->
+                    <button class="btn btn-accent" onclick="openModal('dayoff-management-modal')" style="margin-left: 10px;">
+                        🏖️ Gerenciar Folgas
                     </button>
                 </div>
             </div>
@@ -2332,6 +2361,97 @@
         </div>
     </div>
 
+    <!-- NOVO: Modal de Cadastro de Folga -->
+    <div class="modal" id="dayoff-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Registro de Folga</div>
+                <button class="modal-close" onclick="closeModal('dayoff-modal')">×</button>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Funcionário</label>
+                <select id="dayoff-employee-select" class="form-control">
+                    <!-- Options will be populated -->
+                </select>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Data da Folga</label>
+                    <input type="date" id="dayoff-date" class="form-control" value="">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Tipo de Folga</label>
+                <select id="dayoff-type" class="form-control">
+                    <option value="paid">Folga Remunerada</option>
+                    <option value="unpaid">Folga Não Remunerada</option>
+                    <option value="vacation">Férias</option>
+                    <option value="compensatory">Banco de Horas</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Descrição (Opcional)</label>
+                <input type="text" id="dayoff-description" class="form-control" placeholder="Ex: Folga semanal, compensação, etc.">
+            </div>
+            
+            <!-- Informação de impacto -->
+            <div id="dayoff-impact" style="display: none; padding: 15px; background: rgba(155, 89, 182, 0.1); border-radius: var(--radius-sm); margin: 15px 0;">
+                <div style="font-weight: 600; margin-bottom: 10px;">Impacto no Saldo:</div>
+                <div id="dayoff-impact-details"></div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-primary" style="flex: 1;" onclick="saveDayOff()">
+                    💾 Salvar Folga
+                </button>
+                <button class="btn btn-info" onclick="calculateDayOffImpact()">
+                    📊 Calcular Impacto
+                </button>
+                <button class="btn btn-danger" onclick="closeModal('dayoff-modal')">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOVO: Modal de Gerenciamento de Folgas -->
+    <div class="modal" id="dayoff-management-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Gerenciamento de Folgas</div>
+                <button class="modal-close" onclick="closeModal('dayoff-management-modal')">×</button>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Funcionário</label>
+                <select id="dayoff-management-employee-select" class="form-control" onchange="loadEmployeeDaysOff()">
+                    <!-- Options will be populated -->
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Período</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="month" id="dayoff-start-month" class="form-control" onchange="loadEmployeeDaysOff()">
+                    <span style="align-self: center;">até</span>
+                    <input type="month" id="dayoff-end-month" class="form-control" onchange="loadEmployeeDaysOff()">
+                </div>
+            </div>
+            
+            <div id="dayoff-management-list" style="max-height: 300px; overflow-y: auto; margin-top: 20px;">
+                <!-- Lista de folgas será preenchida aqui -->
+            </div>
+            
+            <button class="btn btn-primary" style="width: 100%; margin-top: 15px;" onclick="openModal('dayoff-modal')">
+                ➕ Adicionar Nova Folga
+            </button>
+        </div>
+    </div>
+
     <!-- Modal de Análise de Saldo -->
     <div class="modal" id="balance-analysis-modal">
         <div class="modal-content">
@@ -2441,6 +2561,12 @@
                     <label style="display: flex; align-items: center; gap: 8px;">
                         <input type="checkbox" id="include-medical-certificates" checked>
                         <span>Considerar atestados no cálculo</span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="auto-zero-dayoff" checked>
+                        <span>Zerar automaticamente datas com folga registrada</span>
                     </label>
                 </div>
             </div>
@@ -2563,6 +2689,7 @@
                 autoCalculateWorkdays: true,
                 includeHolidays: true,
                 includeCertificates: true,
+                autoZeroDayOff: true,
                 weekday: {
                     start: '09:00',
                     end: '18:00',
@@ -2585,6 +2712,8 @@
             monthlyWorkdays: {},
             holidays: {},
             medicalCertificates: {},
+            // NOVO: Estrutura para folgas
+            daysOff: {},
             settings: {
                 standardHours: 8,
                 standardStart: '09:00',
@@ -2636,6 +2765,10 @@
             
             // Initialize workday settings form
             updateWorkdaySettingsForm();
+            
+            // NOVO: Inicializar campos de período para folgas
+            document.getElementById('dayoff-start-month').value = getCurrentMonth();
+            document.getElementById('dayoff-end-month').value = getCurrentMonth();
         });
 
         function initEventListeners() {
@@ -2712,6 +2845,10 @@
             document.getElementById('certificate-end-date')?.addEventListener('change', calculateCertificateImpact);
             
             document.getElementById('modal-entry-date')?.addEventListener('change', updateDayTypeIndicator);
+            
+            // NOVO: Event listeners para folgas
+            document.getElementById('dayoff-date')?.addEventListener('change', calculateDayOffImpact);
+            document.getElementById('dayoff-employee-select')?.addEventListener('change', calculateDayOffImpact);
         }
 
         // Modal Management
@@ -2764,6 +2901,15 @@
                     
                 case 'add-holiday-modal':
                     initAddHolidayModal();
+                    break;
+                    
+                // NOVO: Modal de folgas
+                case 'dayoff-modal':
+                    initDayOffModal();
+                    break;
+                    
+                case 'dayoff-management-modal':
+                    initDayOffManagementModal();
                     break;
             }
             
@@ -2928,6 +3074,7 @@
             document.getElementById('auto-calculate-workdays').checked = db.workdaySettings.autoCalculateWorkdays;
             document.getElementById('include-holidays-in-calculation').checked = db.workdaySettings.includeHolidays;
             document.getElementById('include-medical-certificates').checked = db.workdaySettings.includeCertificates;
+            document.getElementById('auto-zero-dayoff').checked = db.workdaySettings.autoZeroDayOff;
             
             // Clear backup file selection
             clearSelectedBackupFile();
@@ -2938,6 +3085,255 @@
             document.getElementById('holiday-description').value = '';
             document.getElementById('holiday-start').value = '00:00';
             document.getElementById('holiday-end').value = '00:00';
+        }
+
+        // NOVO: Inicializar modal de folga
+        function initDayOffModal() {
+            const select = document.getElementById('dayoff-employee-select');
+            select.innerHTML = '';
+            
+            db.employees.forEach(employee => {
+                const option = document.createElement('option');
+                option.value = employee;
+                option.textContent = employee;
+                if (employee === currentEmployee) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+            
+            document.getElementById('dayoff-date').value = getCurrentDate();
+            document.getElementById('dayoff-description').value = '';
+            document.getElementById('dayoff-impact').style.display = 'none';
+        }
+
+        // NOVO: Inicializar modal de gerenciamento de folgas
+        function initDayOffManagementModal() {
+            const select = document.getElementById('dayoff-management-employee-select');
+            select.innerHTML = '';
+            
+            db.employees.forEach(employee => {
+                const option = document.createElement('option');
+                option.value = employee;
+                option.textContent = employee;
+                if (employee === currentEmployee) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+            
+            loadEmployeeDaysOff();
+        }
+
+        // NOVO: Funções para folgas
+        function calculateDayOffImpact() {
+            const employee = document.getElementById('dayoff-employee-select').value;
+            const date = document.getElementById('dayoff-date').value;
+            const type = document.getElementById('dayoff-type').value;
+            
+            if (!employee || !date) {
+                return;
+            }
+            
+            const dayType = getDayType(date);
+            const impactDiv = document.getElementById('dayoff-impact');
+            const impactDetails = document.getElementById('dayoff-impact-details');
+            
+            let impactText = '';
+            
+            // Verificar se já existe folga nesta data
+            if (db.daysOff[employee] && db.daysOff[employee].includes(date)) {
+                impactText += '<div style="color: var(--warning-color); font-weight: 600;">⚠️ Já existe uma folga registrada para esta data.</div>';
+            }
+            
+            // Verificar se já existe lançamento nesta data
+            const existingEntry = db.entries[employee] ? db.entries[employee].find(e => e.date === date) : null;
+            
+            if (existingEntry) {
+                impactText += `<div>Existe um lançamento nesta data com balanço: ${minutesToHHMM(existingEntry.balanceMinutes)}</div>`;
+                impactText += `<div>Este lançamento será removido e o saldo ajustado para 00:00.</div>`;
+            }
+            
+            impactText += `<div>Tipo de dia: ${dayType.name} (${dayType.hours}h esperadas)</div>`;
+            impactText += `<div>Folga do tipo: ${getDayOffTypeName(type)}</div>`;
+            impactText += `<div>O balanço do dia será zerado automaticamente (00:00).</div>`;
+            
+            impactDetails.innerHTML = impactText;
+            impactDiv.style.display = 'block';
+        }
+
+        function getDayOffTypeName(type) {
+            const types = {
+                'paid': 'Folga Remunerada',
+                'unpaid': 'Folga Não Remunerada',
+                'vacation': 'Férias',
+                'compensatory': 'Banco de Horas'
+            };
+            return types[type] || type;
+        }
+
+        function saveDayOff() {
+            const employee = document.getElementById('dayoff-employee-select').value;
+            const date = document.getElementById('dayoff-date').value;
+            const type = document.getElementById('dayoff-type').value;
+            const description = document.getElementById('dayoff-description').value.trim();
+            
+            if (!employee || !date) {
+                showNotification('Preencha os campos obrigatórios.', 'warning');
+                return;
+            }
+            
+            // Inicializar array de folgas para o funcionário
+            if (!db.daysOff[employee]) {
+                db.daysOff[employee] = [];
+            }
+            
+            // Verificar se já existe folga nesta data
+            if (db.daysOff[employee].includes(date)) {
+                showNotification('Já existe uma folga registrada para esta data.', 'warning');
+                return;
+            }
+            
+            // Verificar se existe lançamento nesta data
+            let existingEntryIndex = -1;
+            let existingEntry = null;
+            if (db.entries[employee]) {
+                existingEntryIndex = db.entries[employee].findIndex(e => e.date === date);
+                if (existingEntryIndex > -1) {
+                    existingEntry = db.entries[employee][existingEntryIndex];
+                }
+            }
+            
+            // Se existir lançamento, remover e ajustar o saldo
+            if (existingEntry && db.workdaySettings.autoZeroDayOff) {
+                // Remover o lançamento
+                db.entries[employee].splice(existingEntryIndex, 1);
+                // Ajustar o saldo (subtrair o balanço que estava contabilizado)
+                updateBalanceForEntry(employee, -(existingEntry.balanceMinutes || 0));
+            }
+            
+            // Adicionar a folga
+            db.daysOff[employee].push({
+                date: date,
+                type: type,
+                description: description,
+                registeredDate: new Date().toISOString()
+            });
+            
+            // Ordenar folgas por data
+            db.daysOff[employee].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            // Salvar os dados
+            saveData();
+            
+            // Atualizar a interface
+            updateAllUIComponents(employee);
+            updateWorkdayInfo();
+            closeModal('dayoff-modal');
+            
+            showNotification('Folga registrada com sucesso!', 'success');
+        }
+
+        function loadEmployeeDaysOff() {
+            const employee = document.getElementById('dayoff-management-employee-select').value;
+            const startMonth = document.getElementById('dayoff-start-month').value;
+            const endMonth = document.getElementById('dayoff-end-month').value;
+            
+            const container = document.getElementById('dayoff-management-list');
+            
+            if (!employee || !db.daysOff[employee] || db.daysOff[employee].length === 0) {
+                container.innerHTML = '<p style="color: var(--text-light); text-align: center; padding: 20px;">Nenhuma folga registrada</p>';
+                return;
+            }
+            
+            let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+            
+            // Filtrar folgas por período
+            const filteredDaysOff = db.daysOff[employee].filter(dayoff => {
+                if (!startMonth || !endMonth) return true;
+                
+                const dayoffDate = new Date(dayoff.date);
+                const startDate = new Date(startMonth + '-01');
+                const endDate = new Date(endMonth + '-01');
+                endDate.setMonth(endDate.getMonth() + 1);
+                endDate.setDate(endDate.getDate() - 1);
+                
+                return dayoffDate >= startDate && dayoffDate <= endDate;
+            });
+            
+            if (filteredDaysOff.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-light); text-align: center; padding: 20px;">Nenhuma folga no período selecionado</p>';
+                return;
+            }
+            
+            filteredDaysOff.forEach((dayoff, index) => {
+                const formattedDate = formatDate(dayoff.date);
+                const dateObj = new Date(dayoff.date);
+                const dayOfWeek = dateObj.getDay();
+                const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+                
+                html += `
+                    <div class="dayoff-item">
+                        <div>
+                            <div style="font-weight: 600;">${formattedDate} (${days[dayOfWeek]})</div>
+                            <div style="font-size: 12px; color: var(--text-light); margin-top: 4px;">
+                                <div>Tipo: ${getDayOffTypeName(dayoff.type)}</div>
+                                ${dayoff.description ? `<div>Descrição: ${dayoff.description}</div>` : ''}
+                                <div>Registrado em: ${formatDate(dayoff.registeredDate.split('T')[0])}</div>
+                            </div>
+                        </div>
+                        <button class="btn btn-icon badge-danger" onclick="deleteDayOff('${employee}', ${index})" title="Excluir">🗑️</button>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function deleteDayOff(employee, index) {
+            if (confirm('Tem certeza que deseja excluir esta folga?')) {
+                if (db.daysOff[employee] && db.daysOff[employee][index]) {
+                    db.daysOff[employee].splice(index, 1);
+                    saveData();
+                    loadEmployeeDaysOff();
+                    updateWorkdayInfo();
+                    showNotification('Folga excluída com sucesso!', 'success');
+                }
+            }
+        }
+
+        // NOVO: Verificar se uma data é folga
+        function isDayOff(employee, dateStr) {
+            if (!db.daysOff[employee] || !db.workdaySettings.autoZeroDayOff) {
+                return false;
+            }
+            
+            return db.daysOff[employee].some(dayoff => dayoff.date === dateStr);
+        }
+
+        // NOVO: Atualizar informações de folgas no sistema
+        function updateDayOffInfo() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth() + 1;
+            const monthKey = `${year}-${String(month).padStart(2, '0')}`;
+            
+            // Contar folgas para o mês atual
+            let daysOffCount = 0;
+            if (currentEmployee && db.daysOff[currentEmployee]) {
+                const currentMonthDaysOff = db.daysOff[currentEmployee].filter(dayoff => {
+                    const dayoffDate = new Date(dayoff.date);
+                    return dayoffDate.getFullYear() === year && dayoffDate.getMonth() + 1 === month;
+                });
+                daysOffCount = currentMonthDaysOff.length;
+            }
+            
+            document.getElementById('daysoff-count').textContent = daysOffCount;
+            
+            if (daysOffCount > 0) {
+                document.getElementById('daysoff-list').textContent = `${daysOffCount} folgas`;
+            }
         }
 
         // ATUALIZADO: Funções de Dias Úteis e Feriados com regras CLT
@@ -3033,7 +3429,7 @@
             return `${yyyy}-${mm}-${dd}`;
         }
 
-        // ATUALIZADO: Função para obter tipo de dia com regras CLT
+        // ATUALIZADO: Função para obter tipo de dia com regras CLT e verificação de folga
         function getDayType(dateStr) {
             if (!dateStr) return { type: 'unknown', name: 'Desconhecido', hours: 0, cltMultiplier: 1 };
             
@@ -3041,7 +3437,17 @@
             const date = new Date(year, month - 1, day);
             const dayOfWeek = date.getDay(); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
             
-            // Verificar se é feriado primeiro
+            // Verificar se é folga primeiro
+            if (currentEmployee && isDayOff(currentEmployee, dateStr)) {
+                return {
+                    type: 'dayoff',
+                    name: 'Folga',
+                    hours: 0,
+                    cltMultiplier: 1
+                };
+            }
+            
+            // Verificar se é feriado
             if (isHoliday(dateStr)) {
                 const yearKey = date.getFullYear();
                 const holiday = db.holidays[yearKey]?.find(h => {
@@ -3083,9 +3489,23 @@
             }
         }
 
+        // ATUALIZADO: updateDayTypeIndicator para incluir folgas
         function updateDayTypeIndicator() {
             const dateStr = document.getElementById('modal-entry-date').value;
-            if (!dateStr) return;
+            const employee = document.getElementById('modal-employee-select').value;
+            if (!dateStr || !employee) return;
+            
+            // Verificar se é folga
+            if (isDayOff(employee, dateStr)) {
+                const indicator = document.getElementById('day-type-indicator');
+                const text = document.getElementById('day-type-text');
+                
+                indicator.style.backgroundColor = 'rgba(155, 89, 182, 0.1)';
+                indicator.style.border = `1px solid rgba(155, 89, 182, 0.3)`;
+                indicator.innerHTML = `🏖️ Folga registrada - balanço do dia será 00:00`;
+                indicator.style.display = 'block';
+                return;
+            }
             
             const dayType = getDayType(dateStr);
             const indicator = document.getElementById('day-type-indicator');
@@ -3192,6 +3612,7 @@
             return totalMinutes / 60;
         }
 
+        // ATUALIZADO: updateWorkdayInfo para incluir folgas
         function updateWorkdayInfo() {
             const today = new Date();
             const year = today.getFullYear();
@@ -3223,8 +3644,19 @@
             }
             document.getElementById('medical-certificates-count').textContent = certificatesCount;
             
-            // Calcular horas esperadas
-            const expectedHours = workdays * (db.workdaySettings.weekday.hours || 8);
+            // NOVO: Contar folgas
+            let daysOffCount = 0;
+            if (currentEmployee && db.daysOff[currentEmployee]) {
+                const currentMonthDaysOff = db.daysOff[currentEmployee].filter(dayoff => {
+                    const dayoffDate = new Date(dayoff.date);
+                    return dayoffDate.getFullYear() === year && dayoffDate.getMonth() + 1 === month;
+                });
+                daysOffCount = currentMonthDaysOff.length;
+            }
+            document.getElementById('daysoff-count').textContent = daysOffCount;
+            
+            // Calcular horas esperadas (considerando folgas)
+            const expectedHours = (workdays - daysOffCount) * (db.workdaySettings.weekday.hours || 8);
             const hours = Math.floor(expectedHours);
             const minutes = Math.round((expectedHours % 1) * 60);
             document.getElementById('expected-month-hours').textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
@@ -3243,6 +3675,10 @@
             
             if (certificatesCount > 0) {
                 document.getElementById('certificates-list').textContent = `${certificatesCount} atestados`;
+            }
+            
+            if (daysOffCount > 0) {
+                document.getElementById('daysoff-list').textContent = `${daysOffCount} folgas`;
             }
         }
 
@@ -3353,6 +3789,9 @@
                 
                 // Substituir o banco de dados atual
                 Object.assign(db, backupDB);
+                
+                // Garantir que a estrutura de folgas exista
+                if (!db.daysOff) db.daysOff = {};
                 
                 // Salvar no localStorage
                 saveData();
@@ -3547,9 +3986,14 @@
             return '';
         }
 
-        // ATUALIZADO: Cálculo com regras CLT
+        // ATUALIZADO: Cálculo com regras CLT e verificação de folga
         function calculateDailyBalanceForPreview(entry) {
             if (!entry.entry || !entry.lunchOut || !entry.lunchIn || !entry.exit) {
+                return '00:00';
+            }
+            
+            // Verificar se é folga
+            if (isDayOff(entry.employee, entry.date)) {
                 return '00:00';
             }
             
@@ -3564,6 +4008,11 @@
             
             const dayType = getDayType(entry.date);
             let balanceMinutes;
+            
+            // Se for folga, balanço = 0
+            if (dayType.type === 'dayoff') {
+                return '00:00';
+            }
             
             // Se for domingo ou feriado com horas 0 e não trabalhado, balanço = 0
             if ((dayType.type === 'sunday' || dayType.type === 'holiday') && dayType.hours === 0 && totalWorked === 0) {
@@ -3632,6 +4081,12 @@
                             return;
                         }
                         
+                        // Verificar se é folga
+                        if (isDayOff(entry.employee, entry.date)) {
+                            skippedCount++;
+                            return;
+                        }
+                        
                         const existingIndex = db.entries[entry.employee] ? 
                             db.entries[entry.employee].findIndex(e => e.date === entry.date) : -1;
                         
@@ -3677,8 +4132,27 @@
             });
         }
 
-        // ATUALIZADO: Criar objeto de entrada com regras CLT
+        // ATUALIZADO: Criar objeto de entrada com regras CLT e verificação de folga
         function createEntryObject(entry) {
+            // Verificar se é folga
+            if (isDayOff(entry.employee, entry.date)) {
+                return {
+                    id: Date.now().toString() + Math.random(),
+                    date: entry.date,
+                    entry: entry.entry,
+                    lunchOut: entry.lunchOut,
+                    lunchIn: entry.lunchIn,
+                    exit: entry.exit,
+                    totalWorkedMinutes: 0,
+                    balanceMinutes: 0,
+                    dayType: 'dayoff',
+                    expectedHours: 0,
+                    weekday: entry.weekday,
+                    cltMultiplier: 1,
+                    isDayOff: true
+                };
+            }
+            
             const dayType = getDayType(entry.date);
             const expectedHours = dayType.hours;
             
@@ -3724,7 +4198,8 @@
                 dayType: dayType.type,
                 expectedHours: expectedHours,
                 weekday: entry.weekday,
-                cltMultiplier: cltMultiplier
+                cltMultiplier: cltMultiplier,
+                isDayOff: false
             };
         }
 
@@ -3788,6 +4263,7 @@
                 db.entries[employeeName] = [];
                 db.positiveHours[employeeName] = 0;
                 db.negativeHours[employeeName] = 0;
+                db.daysOff[employeeName] = [];
                 
                 return true;
             }
@@ -3827,8 +4303,13 @@
             return `${d}/${m}/${y}`;
         }
 
-        // ATUALIZADO: Cálculo diário com regras CLT
+        // ATUALIZADO: Cálculo diário com regras CLT e verificação de folga
         function calculateDailyBalance(entry) {
+            // Verificar se é folga
+            if (isDayOff(entry.employee, entry.date)) {
+                return 0;
+            }
+            
             const dateStr = entry.date;
             const dayType = getDayType(dateStr);
             const expectedHours = dayType.hours;
@@ -3847,6 +4328,11 @@
             }
             
             let balanceMinutes;
+            
+            // Se for folga, balanço = 0
+            if (dayType.type === 'dayoff') {
+                return 0;
+            }
             
             // Regras CLT para domingos e feriados
             if ((dayType.type === 'sunday' || dayType.type === 'holiday') && expectedHours === 0 && totalWorked === 0) {
@@ -3877,6 +4363,7 @@
             });
         }
 
+        // ATUALIZADO: calculateAndSaveEntry com verificação de folga
         function calculateAndSaveEntry() {
             const employee = document.getElementById('modal-employee-select').value;
             const date = document.getElementById('modal-entry-date').value;
@@ -3890,14 +4377,20 @@
                 return;
             }
             
+            // Verificar se é folga
+            if (isDayOff(employee, date)) {
+                showNotification('Esta data está registrada como folga. O balanço será 00:00.', 'warning');
+            }
+            
             const dayType = getDayType(date);
             const hasCertificate = isDateAffectedByCertificate(employee, date);
+            const isDayOffDate = isDayOff(employee, date);
             
             const balanceMinutes = calculateDailyBalance({
                 date, entry, lunchOut, lunchIn, exit, employee
             });
             
-            const expectedHours = hasCertificate ? 0 : dayType.hours;
+            const expectedHours = hasCertificate ? 0 : (isDayOffDate ? 0 : dayType.hours);
             const totalWorkedMinutes = Math.abs(balanceMinutes) + (expectedHours * 60);
             
             const newEntry = {
@@ -3912,6 +4405,7 @@
                 dayType: dayType.type,
                 expectedHours: expectedHours,
                 hasCertificate: hasCertificate,
+                isDayOff: isDayOffDate,
                 cltMultiplier: dayType.cltMultiplier
             };
             
@@ -3945,6 +4439,7 @@
             showNotification('Horários lançados com sucesso!', 'success');
         }
 
+        // ATUALIZADO: saveAndSuggestNext com verificação de folga
         function saveAndSuggestNext() {
             const employee = document.getElementById('modal-employee-select').value;
             const date = document.getElementById('modal-entry-date').value;
@@ -3958,14 +4453,20 @@
                 return;
             }
             
+            // Verificar se é folga
+            if (isDayOff(employee, date)) {
+                showNotification('Esta data está registrada como folga. O balanço será 00:00.', 'warning');
+            }
+            
             const dayType = getDayType(date);
             const hasCertificate = isDateAffectedByCertificate(employee, date);
+            const isDayOffDate = isDayOff(employee, date);
             
             const balanceMinutes = calculateDailyBalance({
                 date, entry, lunchOut, lunchIn, exit, employee
             });
             
-            const expectedHours = hasCertificate ? 0 : dayType.hours;
+            const expectedHours = hasCertificate ? 0 : (isDayOffDate ? 0 : dayType.hours);
             const totalWorkedMinutes = Math.abs(balanceMinutes) + (expectedHours * 60);
             
             const newEntry = {
@@ -3980,6 +4481,7 @@
                 dayType: dayType.type,
                 expectedHours: expectedHours,
                 hasCertificate: hasCertificate,
+                isDayOff: isDayOffDate,
                 cltMultiplier: dayType.cltMultiplier
             };
             
@@ -4179,6 +4681,7 @@
             updateAllUIComponents(employee);
         }
 
+        // ATUALIZADO: updateAllUIComponents para incluir folgas
         function updateAllUIComponents(employee) {
             updateBalanceDetails(employee);
             updateDetailedBalanceCards(employee);
@@ -4187,6 +4690,7 @@
             updateChangeIndicators(employee);
             refreshHistory();
             updateWorkdayInfo();
+            updateDayOffInfo();
         }
 
         function updateBalanceDetails(employee) {
@@ -4368,6 +4872,7 @@
             saveData();
         }
 
+        // ATUALIZADO: refreshHistory para mostrar folgas
         function refreshHistory() {
             const historyContent = document.getElementById('history-content');
             
@@ -4402,6 +4907,7 @@
                                 <th>Total</th>
                                 <th>Balanço</th>
                                 <th>CLT</th>
+                                <th>Status</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
@@ -4427,6 +4933,16 @@
                     cltInfo = `x${entry.cltMultiplier}`;
                 }
                 
+                // Verificar se é folga
+                let dayoffBadge = '';
+                if (entry.isDayOff || isDayOff(currentEmployee, entry.date)) {
+                    dayoffBadge = '<span class="badge badge-accent">🏖️ Folga</span>';
+                } else if (entry.hasCertificate) {
+                    dayoffBadge = '<span class="badge badge-info">🏥 Atestado</span>';
+                } else if (entry.dayType === 'holiday') {
+                    dayoffBadge = '<span class="badge badge-warning">🎉 Feriado</span>';
+                }
+                
                 html += `
                     <tr>
                         <td>${formatDate(entry.date)}</td>
@@ -4438,6 +4954,7 @@
                         <td>${minutesToHHMM(entry.totalWorkedMinutes || 0)}</td>
                         <td><span class="badge ${balanceClass}">${balanceText}</span></td>
                         <td><span class="badge ${entry.cltMultiplier > 1 ? 'badge-accent' : 'badge-primary'}">${cltInfo}</span></td>
+                        <td>${dayoffBadge}</td>
                         <td>
                             <button class="btn btn-icon" onclick="editEntry('${entry.id}')" title="Editar">
                                 ✏️
@@ -4498,14 +5015,22 @@
                 exit: document.getElementById('edit-exit-time').value
             };
             
-            const newBalance = calculateDailyBalance(updatedEntry);
-            updatedEntry.balanceMinutes = newBalance;
-            updatedEntry.totalWorkedMinutes = Math.abs(newBalance) + (updatedEntry.expectedHours * 60);
+            // Verificar se é folga
+            if (isDayOff(currentEmployee, updatedEntry.date)) {
+                updatedEntry.balanceMinutes = 0;
+                updatedEntry.totalWorkedMinutes = 0;
+                updatedEntry.isDayOff = true;
+            } else {
+                const newBalance = calculateDailyBalance(updatedEntry);
+                updatedEntry.balanceMinutes = newBalance;
+                updatedEntry.totalWorkedMinutes = Math.abs(newBalance) + (updatedEntry.expectedHours * 60);
+                updatedEntry.isDayOff = false;
+            }
             
             db.entries[currentEmployee][entryIndex] = updatedEntry;
             
             updateBalanceForEntry(currentEmployee, -oldBalance);
-            updateBalanceForEntry(currentEmployee, newBalance);
+            updateBalanceForEntry(currentEmployee, updatedEntry.balanceMinutes);
             
             saveData();
             updateAllUIComponents(currentEmployee);
@@ -4568,6 +5093,7 @@
             db.entries[employeeName] = [];
             db.positiveHours[employeeName] = 0;
             db.negativeHours[employeeName] = 0;
+            db.daysOff[employeeName] = [];
             
             if (balance) {
                 const balanceMinutes = HHMMtoMinutes(balance);
@@ -4686,6 +5212,7 @@
             }, 3000);
         }
 
+        // ATUALIZADO: loadData para incluir folgas
         function loadData() {
             const savedDB = localStorage.getItem('overtimeProDB');
             if (savedDB) {
@@ -4712,6 +5239,7 @@
                     autoCalculateWorkdays: true,
                     includeHolidays: true,
                     includeCertificates: true,
+                    autoZeroDayOff: true,
                     weekday: { start: '09:00', end: '18:00', lunch: 60, hours: 8 },
                     saturday: { start: '09:00', end: '13:00', lunch: 0, hours: 4 },
                     sunday: { start: '00:00', end: '00:00', lunch: 0, hours: 0 }
@@ -4719,6 +5247,7 @@
                 if (!db.monthlyWorkdays) db.monthlyWorkdays = {};
                 if (!db.holidays) db.holidays = {};
                 if (!db.medicalCertificates) db.medicalCertificates = {};
+                if (!db.daysOff) db.daysOff = {};
                 
                 if (db.settings.darkMode) {
                     document.body.classList.add('dark-mode');
@@ -4736,7 +5265,7 @@
             localStorage.setItem('overtimeProDB', JSON.stringify(db));
         }
 
-        // ATUALIZADO: Preview com regras CLT
+        // ATUALIZADO: Preview com regras CLT e verificação de folga
         function previewCalculation() {
             const entry = {
                 entry: document.getElementById('modal-entry-time').value,
@@ -4756,6 +5285,7 @@
             updateDayTypeIndicator();
             
             const hasCertificate = employee && isDateAffectedByCertificate(employee, dateStr);
+            const isDayOffDate = employee && isDayOff(employee, dateStr);
             
             const balanceMinutes = calculateDailyBalance({
                 ...entry,
@@ -4763,10 +5293,11 @@
                 employee: employee
             });
             
-            const totalWorkedMinutes = Math.abs(balanceMinutes) + (dayType.hours * 60);
+            const expectedHours = hasCertificate ? 0 : (isDayOffDate ? 0 : dayType.hours);
+            const totalWorkedMinutes = Math.abs(balanceMinutes) + (expectedHours * 60);
             
             document.getElementById('preview-total').textContent = minutesToHHMM(totalWorkedMinutes);
-            document.getElementById('preview-expected').textContent = `${dayType.hours}:00`;
+            document.getElementById('preview-expected').textContent = `${expectedHours}:00`;
             document.getElementById('preview-overtime').textContent = 
                 balanceMinutes > 0 ? `+${minutesToHHMM(balanceMinutes)}` : 
                 balanceMinutes < 0 ? `${minutesToHHMM(balanceMinutes)}` : '00:00';
@@ -4775,7 +5306,12 @@
             const resultText = document.getElementById('preview-result-text');
             const analysisText = document.getElementById('preview-analysis');
             
-            if (hasCertificate) {
+            if (isDayOffDate) {
+                resultText.textContent = `Folga - 00:00`;
+                previewResult.className = 'preview-result';
+                analysisText.textContent = '🏖️ Dia com folga registrada - balanço zerado automaticamente';
+                analysisText.style.color = 'var(--accent-color)';
+            } else if (hasCertificate) {
                 resultText.textContent = `Atestado - ${minutesToHHMM(totalWorkedMinutes)} extras`;
                 previewResult.className = 'preview-result positive';
                 analysisText.textContent = '🏥 Dia com atestado médico - horas trabalhadas são extras';
@@ -5028,7 +5564,8 @@
                 const dateStr = currentDate.toISOString().split('T')[0];
                 const dayType = getDayType(dateStr);
                 
-                if (dayType.type !== 'sunday' || dayType.hours > 0) {
+                // Verificar se é folga
+                if (!isDayOff(employee, dateStr) && (dayType.type !== 'sunday' || dayType.hours > 0)) {
                     workdaysAffected++;
                     totalHours += dayType.hours;
                 }
@@ -5084,7 +5621,8 @@
                 const dateStr = currentDate.toISOString().split('T')[0];
                 const dayType = getDayType(dateStr);
                 
-                if (dayType.type !== 'sunday' || dayType.hours > 0) {
+                // Não considerar folgas
+                if (!isDayOff(employee, dateStr) && (dayType.type !== 'sunday' || dayType.hours > 0)) {
                     totalHours += dayType.hours;
                     affectedDates.push(dateStr);
                 }
@@ -5209,6 +5747,7 @@
             updateMonthlyBreakdown(employee);
         }
 
+        // ATUALIZADO: updateSpecialConsiderations para incluir folgas
         function updateSpecialConsiderations(employee) {
             const container = document.getElementById('special-considerations');
             let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
@@ -5226,6 +5765,30 @@
                         </div>
                     </div>
                 `;
+            }
+            
+            // NOVO: Adicionar informações sobre folgas
+            if (db.daysOff[employee] && db.daysOff[employee].length > 0) {
+                const currentYear = new Date().getFullYear();
+                const currentMonth = new Date().getMonth() + 1;
+                const currentMonthDaysOff = db.daysOff[employee].filter(dayoff => {
+                    const dayoffDate = new Date(dayoff.date);
+                    return dayoffDate.getFullYear() === currentYear && dayoffDate.getMonth() + 1 === currentMonth;
+                });
+                
+                if (currentMonthDaysOff.length > 0) {
+                    html += `
+                        <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(155, 89, 182, 0.1); border-radius: var(--radius-sm);">
+                            <span style="font-size: 20px;">🏖️</span>
+                            <div>
+                                <div style="font-weight: 600;">Folgas Registradas</div>
+                                <div style="font-size: 12px; color: var(--text-light);">
+                                    ${currentMonthDaysOff.length} folga(s) neste mês - Balanço das datas zerado automaticamente
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
             }
             
             const today = new Date();
@@ -5331,6 +5894,7 @@
             db.workdaySettings.autoCalculateWorkdays = document.getElementById('auto-calculate-workdays').checked;
             db.workdaySettings.includeHolidays = document.getElementById('include-holidays-in-calculation').checked;
             db.workdaySettings.includeCertificates = document.getElementById('include-medical-certificates').checked;
+            db.workdaySettings.autoZeroDayOff = document.getElementById('auto-zero-dayoff').checked;
             
             if (db.workdaySettings.autoCalculateWorkdays) {
                 const today = new Date();
@@ -5613,6 +6177,22 @@
                 considerationsY += 7;
             }
             
+            // NOVO: Adicionar informações sobre folgas
+            if (db.daysOff[employee] && db.daysOff[employee].length > 0) {
+                const currentYear = new Date().getFullYear();
+                const currentMonthDaysOff = db.daysOff[employee].filter(dayoff => {
+                    const dayoffDate = new Date(dayoff.date);
+                    return dayoffDate.getFullYear() === currentYear;
+                });
+                
+                if (currentMonthDaysOff.length > 0) {
+                    doc.text(`• ${currentMonthDaysOff.length} folga(s) registrada(s)`, marginLeft + 5, considerationsY);
+                    considerationsY += 7;
+                    doc.text(`  Datas com folga têm balanço automaticamente zerado`, marginLeft + 10, considerationsY);
+                    considerationsY += 7;
+                }
+            }
+            
             // Resumo final
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
@@ -5700,6 +6280,13 @@
             window.handleBackupFileSelect = handleBackupFileSelect;
             window.clearSelectedBackupFile = clearSelectedBackupFile;
             window.restoreBackup = restoreBackup;
+            // NOVO: Funções para folgas
+            window.initDayOffModal = initDayOffModal;
+            window.initDayOffManagementModal = initDayOffManagementModal;
+            window.calculateDayOffImpact = calculateDayOffImpact;
+            window.saveDayOff = saveDayOff;
+            window.loadEmployeeDaysOff = loadEmployeeDaysOff;
+            window.deleteDayOff = deleteDayOff;
         }
     </script>
 </body>
