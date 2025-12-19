@@ -10,6 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <!-- Adicionando SheetJS para leitura de Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
@@ -1483,6 +1484,209 @@
             border-radius: var(--radius-sm);
             border: 1px solid rgba(155, 89, 182, 0.3);
         }
+/* Layout para espelho de ponto */
+.mirror-sheet {
+    font-family: 'Inter', sans-serif;
+    background: white;
+    color: #2c3e50;
+    padding: 30px;
+    max-width: 210mm;
+    margin: 0 auto;
+    border: 2px solid #2c3e50;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.mirror-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 3px solid #2c3e50;
+}
+
+.mirror-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.mirror-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.mirror-info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.mirror-info-label {
+    font-size: 12px;
+    color: #7f8c8d;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.mirror-info-value {
+    font-size: 14px;
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+.mirror-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 11px;
+}
+
+.mirror-table th {
+    background: #2c3e50;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    font-weight: 600;
+    border: 1px solid #34495e;
+}
+
+.mirror-table td {
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #ecf0f1;
+    background: white;
+}
+
+.mirror-table tr.dayoff {
+    background: rgba(155, 89, 182, 0.1);
+}
+
+.mirror-table tr.holiday {
+    background: rgba(230, 126, 34, 0.1);
+}
+
+.mirror-table tr.certificate {
+    background: rgba(52, 152, 219, 0.1);
+}
+
+.dayoff-badge {
+    background: #9b59b6;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.holiday-badge {
+    background: #e67e22;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.certificate-badge {
+    background: #3498db;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.mirror-totals {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #2c3e50;
+}
+
+.totals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+}
+
+.total-item {
+    text-align: center;
+    padding: 10px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #ecf0f1;
+}
+
+.total-label {
+    font-size: 11px;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+.total-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.total-value.positive {
+    color: #27ae60;
+}
+
+.total-value.negative {
+    color: #e74c3c;
+}
+
+/* Estilo para download do modelo */
+.model-download-section {
+    text-align: center;
+    padding: 30px;
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.05), rgba(44, 62, 80, 0.05));
+    border-radius: var(--radius-md);
+    border: 2px dashed rgba(52, 152, 219, 0.3);
+    margin-bottom: 30px;
+}
+
+.model-preview {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 15px;
+    margin: 20px 0;
+    overflow-x: auto;
+}
+
+.model-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.model-table th {
+    background: rgba(52, 152, 219, 0.1);
+    padding: 10px;
+    text-align: center;
+    font-weight: 600;
+    border: 1px solid var(--border-color);
+}
+
+.model-table td {
+    padding: 8px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    font-family: 'Courier New', monospace;
+}
+
+.model-table tr:nth-child(even) {
+    background: rgba(0, 0, 0, 0.02);
+}
     </style>
 </head>
 <body>
@@ -1806,6 +2010,67 @@
                     Importe o arquivo de ponto em Excel para lançar automaticamente os registros de todos os funcionários
                 </p>
             </div>
+<!-- NOVO: Seção para download do modelo e espelho de ponto -->
+<div class="model-download-section fade-in">
+    <h3 style="margin-bottom: 15px; color: var(--text-primary);">Modelos e Relatórios</h3>
+    <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px;">
+        <button class="btn btn-success" onclick="downloadExcelTemplate()">
+            📥 Baixar Modelo de Planilha
+        </button>
+        <button class="btn btn-primary" onclick="generateMirrorPDF()">
+            📄 Gerar Espelho de Ponto
+        </button>
+        <button class="btn btn-accent" onclick="openModal('mirror-period-modal')">
+            🗓️ Espelho por Período
+        </button>
+    </div>
+    
+    <!-- Preview do modelo -->
+    <div class="model-preview">
+        <h4 style="margin-bottom: 10px; color: var(--text-secondary);">Formato do Modelo Excel:</h4>
+        <table class="model-table">
+            <thead>
+                <tr>
+                    <th>Funcionário</th>
+                    <th>Data</th>
+                    <th>Entrada</th>
+                    <th>Saída Almoço</th>
+                    <th>Retorno Almoço</th>
+                    <th>Saída</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>João Silva</td>
+                    <td>2024-01-15</td>
+                    <td>09:00</td>
+                    <td>12:00</td>
+                    <td>13:00</td>
+                    <td>18:00</td>
+                </tr>
+                <tr>
+                    <td>Maria Santos</td>
+                    <td>2024-01-15</td>
+                    <td>08:45</td>
+                    <td>12:00</td>
+                    <td>13:00</td>
+                    <td>17:45</td>
+                </tr>
+                <tr>
+                    <td>José Oliveira</td>
+                    <td>2024-01-15</td>
+                    <td>09:15</td>
+                    <td>12:15</td>
+                    <td>13:15</td>
+                    <td>18:15</td>
+                </tr>
+            </tbody>
+        </table>
+        <p style="margin-top: 10px; color: var(--text-light); font-size: 12px;">
+            ⚠️ As datas devem estar no formato AAAA-MM-DD e os horários no formato HH:MM (24h)
+        </p>
+    </div>
+</div>
 
             <!-- History Table -->
             <div class="card fade-in">
@@ -2671,6 +2936,97 @@
             </div>
         </div>
     </div>
+<!-- NOVO: Modal para definir período do espelho de ponto -->
+<div class="modal" id="mirror-period-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">Espelho de Ponto - Período</div>
+            <button class="modal-close" onclick="closeModal('mirror-period-modal')">×</button>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Funcionário</label>
+            <select id="mirror-employee-select" class="form-control">
+                <!-- Options will be populated -->
+            </select>
+        </div>
+        
+        <div class="form-grid">
+            <div class="form-group">
+                <label class="form-label">Data Inicial</label>
+                <input type="date" id="mirror-start-date" class="form-control">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Data Final</label>
+                <input type="date" id="mirror-end-date" class="form-control">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Opções do Relatório</label>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                <label style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="include-dayoffs" checked>
+                    <span>Incluir dias de folga (zerados automaticamente)</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="include-holidays" checked>
+                    <span>Incluir feriados</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="include-certificates" checked>
+                    <span>Incluir atestados médicos</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="show-totals" checked>
+                    <span>Mostrar totais por período</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="show-signature" checked>
+                    <span>Incluir campo para assinatura</span>
+                </label>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button class="btn btn-primary" style="flex: 1;" onclick="generatePeriodMirrorPDF()">
+                📄 Gerar Espelho de Ponto
+            </button>
+            <button class="btn btn-info" onclick="previewMirror()">
+                👁️ Pré-visualizar
+            </button>
+            <button class="btn btn-danger" onclick="closeModal('mirror-period-modal')">
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- NOVO: Modal de pré-visualização do espelho -->
+<div class="modal" id="mirror-preview-modal">
+    <div class="modal-content" style="max-width: 1000px; max-height: 90vh;">
+        <div class="modal-header">
+            <div class="modal-title">Pré-visualização do Espelho de Ponto</div>
+            <button class="modal-close" onclick="closeModal('mirror-preview-modal')">×</button>
+        </div>
+        
+        <div id="mirror-preview-content">
+            <!-- Conteúdo será gerado aqui -->
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: center;">
+            <button class="btn btn-primary" onclick="downloadMirrorPDF()">
+                💾 Baixar em PDF
+            </button>
+            <button class="btn btn-success" onclick="printMirror()">
+                🖨️ Imprimir
+            </button>
+            <button class="btn btn-danger" onclick="closeModal('mirror-preview-modal')">
+                Fechar
+            </button>
+        </div>
+    </div>
+</div>
 
     <script>
         // Database structure
@@ -2911,6 +3267,13 @@
                 case 'dayoff-management-modal':
                     initDayOffManagementModal();
                     break;
+               case 'mirror-period-modal':
+            initMirrorPeriodModal();
+            break;
+            
+               case 'mirror-preview-modal':
+            // Já está inicializado pelo preview
+            break;
             }
             
             modal.classList.add('active');
@@ -3828,6 +4191,40 @@
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
+function downloadExcelTemplate() {
+    // Criar uma planilha modelo
+    const templateData = [
+        ['INSTRUÇÕES: Preencha os dados abaixo seguindo o formato indicado'],
+        [''],
+        ['Funcionário', 'Data', 'Entrada', 'Saída Almoço', 'Retorno Almoço', 'Saída'],
+        ['Ex: João Silva', '2024-01-15', '09:00', '12:00', '13:00', '18:00'],
+        ['Ex: Maria Santos', '2024-01-15', '08:45', '12:00', '13:00', '17:45'],
+        [''],
+        ['FORMATOS:'],
+        ['• Data: AAAA-MM-DD (ex: 2024-01-15)'],
+        ['• Horário: HH:MM (24h, ex: 14:30)'],
+        ['• Folga: deixe as células de horário em branco'],
+        ['• Não altere os cabeçalhos da linha 3']
+    ];
+    
+    const ws = XLSX.utils.aoa_to_sheet(templateData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Modelo Ponto');
+    
+    // Estilizar largura das colunas
+    const wscols = [
+        {wch: 25}, // Funcionário
+        {wch: 12}, // Data
+        {wch: 10}, // Entrada
+        {wch: 12}, // Saída Almoço
+        {wch: 12}, // Retorno Almoço
+        {wch: 10}  // Saída
+    ];
+    ws['!cols'] = wscols;
+    
+    XLSX.writeFile(wb, 'modelo_registro_ponto.xlsx');
+    showNotification('Modelo de planilha baixado com sucesso!', 'success');
+}
 
         function clearSelectedFile() {
             document.getElementById('excel-file-input').value = '';
@@ -5386,6 +5783,402 @@
             updateWorkdayInfo();
             showNotification('Feriados nacionais adicionados com sucesso!', 'success');
         }
+function generateMirrorPDF() {
+    if (!currentEmployee) {
+        showNotification('Selecione um funcionário primeiro!', 'warning');
+        return;
+    }
+    
+    generatePeriodMirrorPDF();
+}
+
+// NOVO: Inicializar modal do espelho de ponto
+function initMirrorPeriodModal() {
+    const select = document.getElementById('mirror-employee-select');
+    select.innerHTML = '';
+    
+    db.employees.forEach(employee => {
+        const option = document.createElement('option');
+        option.value = employee;
+        option.textContent = employee;
+        if (employee === currentEmployee) {
+            option.selected = true;
+        }
+        select.appendChild(option);
+    });
+    
+    // Definir datas padrão (mês atual)
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    
+    document.getElementById('mirror-start-date').value = firstDay.toISOString().split('T')[0];
+    document.getElementById('mirror-end-date').value = lastDay.toISOString().split('T')[0];
+    
+    // Marcar opções por padrão
+    document.getElementById('include-dayoffs').checked = true;
+    document.getElementById('include-holidays').checked = true;
+    document.getElementById('include-certificates').checked = true;
+    document.getElementById('show-totals').checked = true;
+    document.getElementById('show-signature').checked = true;
+}
+
+// NOVO: Gerar espelho de ponto por período
+function generatePeriodMirrorPDF() {
+    const employee = document.getElementById('mirror-employee-select').value;
+    const startDate = document.getElementById('mirror-start-date').value;
+    const endDate = document.getElementById('mirror-end-date').value;
+    
+    if (!employee || !startDate || !endDate) {
+        showNotification('Preencha todos os campos!', 'warning');
+        return;
+    }
+    
+    if (new Date(startDate) > new Date(endDate)) {
+        showNotification('Data inicial não pode ser maior que data final!', 'warning');
+        return;
+    }
+    
+    // Gerar preview
+    previewMirror(employee, startDate, endDate);
+}
+
+// NOVO: Pré-visualizar espelho de ponto
+function previewMirror(employee = null, startDate = null, endDate = null) {
+    if (!employee) {
+        employee = document.getElementById('mirror-employee-select').value;
+        startDate = document.getElementById('mirror-start-date').value;
+        endDate = document.getElementById('mirror-end-date').value;
+    }
+    
+    const includeDayoffs = document.getElementById('include-dayoffs').checked;
+    const includeHolidays = document.getElementById('include-holidays').checked;
+    const includeCertificates = document.getElementById('include-certificates').checked;
+    const showTotals = document.getElementById('show-totals').checked;
+    const showSignature = document.getElementById('show-signature').checked;
+    
+    // Obter registros do período
+    const entries = db.entries[employee] || [];
+    const periodEntries = entries.filter(entry => {
+        const entryDate = new Date(entry.date);
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        return entryDate >= start && entryDate <= end;
+    }).sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    // Verificar folgas registradas
+    const daysOff = db.daysOff[employee] || [];
+    const periodDaysOff = daysOff.filter(dayoff => {
+        const dayoffDate = new Date(dayoff.date);
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        return dayoffDate >= start && dayoffDate <= end;
+    }).map(d => d.date);
+    
+    // Verificar feriados
+    const holidays = [];
+    if (includeHolidays) {
+        const year = new Date(startDate).getFullYear();
+        if (db.holidays[year]) {
+            db.holidays[year].forEach(holiday => {
+                const holidayDate = new Date(holiday.date);
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                if (holidayDate >= start && holidayDate <= end) {
+                    holidays.push({
+                        date: holiday.date,
+                        description: holiday.description
+                    });
+                }
+            });
+        }
+    }
+    
+    // Verificar atestados
+    const certificates = [];
+    if (includeCertificates && db.medicalCertificates[employee]) {
+        db.medicalCertificates[employee].forEach(cert => {
+            const certStart = new Date(cert.startDate);
+            const certEnd = new Date(cert.endDate);
+            const periodStart = new Date(startDate);
+            const periodEnd = new Date(endDate);
+            
+            // Verificar sobreposição de períodos
+            if (certStart <= periodEnd && certEnd >= periodStart) {
+                certificates.push({
+                    startDate: cert.startDate,
+                    endDate: cert.endDate,
+                    description: `${cert.type} - ${cert.doctor || 'Sem médico'}`
+                });
+            }
+        });
+    }
+    
+    // Calcular totais
+    let totalWorkedMinutes = 0;
+    let totalPositiveMinutes = 0;
+    let totalNegativeMinutes = 0;
+    
+    periodEntries.forEach(entry => {
+        totalWorkedMinutes += entry.totalWorkedMinutes || 0;
+        if (entry.balanceMinutes > 0) {
+            totalPositiveMinutes += entry.balanceMinutes;
+        } else if (entry.balanceMinutes < 0) {
+            totalNegativeMinutes += Math.abs(entry.balanceMinutes);
+        }
+    });
+    
+    // Gerar HTML do espelho
+    let html = `
+        <div class="mirror-sheet" id="mirror-content">
+            <div class="mirror-header">
+                <h1>ESPELHO DE PONTO</h1>
+                <p>Excellencia Lingerie LTDA - Sistema de Controle de Ponto</p>
+            </div>
+            
+            <div class="mirror-info">
+                <div class="mirror-info-item">
+                    <span class="mirror-info-label">Funcionário</span>
+                    <span class="mirror-info-value">${employee}</span>
+                </div>
+                <div class="mirror-info-item">
+                    <span class="mirror-info-label">Período</span>
+                    <span class="mirror-info-value">${formatDate(startDate)} a ${formatDate(endDate)}</span>
+                </div>
+                <div class="mirror-info-item">
+                    <span class="mirror-info-label">Data de Emissão</span>
+                    <span class="mirror-info-value">${new Date().toLocaleDateString('pt-BR')}</span>
+                </div>
+                <div class="mirror-info-item">
+                    <span class="mirror-info-label">Total de Dias</span>
+                    <span class="mirror-info-value">${periodEntries.length} dias registrados</span>
+                </div>
+            </div>
+            
+            <table class="mirror-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Dia</th>
+                        <th>Entrada</th>
+                        <th>Saída Almoço</th>
+                        <th>Retorno</th>
+                        <th>Saída</th>
+                        <th>Total</th>
+                        <th>Balanço</th>
+                        <th>Status</th>
+                        <th>Observações</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    // Adicionar linhas para cada dia do período
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    let currentDate = new Date(start);
+    
+    while (currentDate <= end) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        const formattedDate = formatDate(dateStr);
+        const dayOfWeek = currentDate.getDay();
+        const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        
+        // Verificar se é folga
+        const isDayOff = periodDaysOff.includes(dateStr);
+        // Verificar se é feriado
+        const holiday = holidays.find(h => h.date === dateStr);
+        // Verificar se tem atestado
+        const certificate = certificates.find(c => {
+            const certDate = new Date(dateStr);
+            const certStart = new Date(c.startDate);
+            const certEnd = new Date(c.endDate);
+            return certDate >= certStart && certDate <= certEnd;
+        });
+        // Buscar registro
+        const entry = periodEntries.find(e => e.date === dateStr);
+        
+        let rowClass = '';
+        let statusBadge = '';
+        let observations = '';
+        
+        if (isDayOff && includeDayoffs) {
+            rowClass = 'dayoff';
+            statusBadge = '<span class="dayoff-badge">FOLGA</span>';
+            observations = 'Folga registrada - balanço zerado';
+        } else if (holiday) {
+            rowClass = 'holiday';
+            statusBadge = '<span class="holiday-badge">FERIADO</span>';
+            observations = holiday.description;
+        } else if (certificate) {
+            rowClass = 'certificate';
+            statusBadge = '<span class="certificate-badge">ATESTADO</span>';
+            observations = certificate.description;
+        } else if (entry) {
+            // Dia normal com registro
+            const balanceClass = entry.balanceMinutes > 0 ? 'positive' : 
+                               entry.balanceMinutes < 0 ? 'negative' : '';
+            const balanceText = entry.balanceMinutes > 0 ? `+${minutesToHHMM(entry.balanceMinutes)}` :
+                               entry.balanceMinutes < 0 ? minutesToHHMM(entry.balanceMinutes) :
+                               '00:00';
+            
+            statusBadge = balanceClass === 'positive' ? '<span style="color:#27ae60">EXTRA</span>' :
+                         balanceClass === 'negative' ? '<span style="color:#e74c3c">FALTA</span>' :
+                         '<span style="color:#3498db">NORMAL</span>';
+            
+            html += `
+                <tr>
+                    <td>${formattedDate}</td>
+                    <td>${days[dayOfWeek]}</td>
+                    <td>${entry.entry || '-'}</td>
+                    <td>${entry.lunchOut || '-'}</td>
+                    <td>${entry.lunchIn || '-'}</td>
+                    <td>${entry.exit || '-'}</td>
+                    <td>${minutesToHHMM(entry.totalWorkedMinutes || 0)}</td>
+                    <td style="font-weight: bold; color: ${balanceClass === 'positive' ? '#27ae60' : balanceClass === 'negative' ? '#e74c3c' : '#2c3e50'}">
+                        ${balanceText}
+                    </td>
+                    <td>${statusBadge}</td>
+                    <td>${entry.dayType === 'saturday' ? 'Sábado' : entry.dayType === 'sunday' ? 'Domingo' : 'Dia útil'}</td>
+                </tr>
+            `;
+        } else {
+            // Dia sem registro
+            html += `
+                <tr>
+                    <td>${formattedDate}</td>
+                    <td>${days[dayOfWeek]}</td>
+                    <td colspan="6" style="text-align: center; color: #95a5a6; font-style: italic;">
+                        Sem registro de ponto
+                    </td>
+                    <td></td>
+                </tr>
+            `;
+        }
+        
+        // Pular para o próximo dia
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    html += `
+                </tbody>
+            </table>
+    `;
+    
+    // Adicionar totais
+    if (showTotals) {
+        html += `
+            <div class="mirror-totals">
+                <h3 style="margin-bottom: 15px; color: #2c3e50;">RESUMO DO PERÍODO</h3>
+                <div class="totals-grid">
+                    <div class="total-item">
+                        <div class="total-label">Horas Trabalhadas</div>
+                        <div class="total-value">${minutesToHHMM(totalWorkedMinutes)}</div>
+                    </div>
+                    <div class="total-item">
+                        <div class="total-label">Horas Extras</div>
+                        <div class="total-value positive">${minutesToHHMM(totalPositiveMinutes)}</div>
+                    </div>
+                    <div class="total-item">
+                        <div class="total-label">Horas Falta</div>
+                        <div class="total-value negative">${minutesToHHMM(totalNegativeMinutes)}</div>
+                    </div>
+                    <div class="total-item">
+                        <div class="total-label">Saldo Líquido</div>
+                        <div class="total-value ${totalPositiveMinutes - totalNegativeMinutes >= 0 ? 'positive' : 'negative'}">
+                            ${minutesToHHMM(totalPositiveMinutes - totalNegativeMinutes)}
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 15px; font-size: 12px; color: #7f8c8d;">
+                    <p>• Dias de folga têm balanço automaticamente zerado (00:00)</p>
+                    <p>• Feriados e atestados são destacados conforme configuração</p>
+                    <p>• Horas extras em finais de semana e feriados seguem regras CLT</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Adicionar campo para assinatura
+    if (showSignature) {
+        html += `
+            <div style="margin-top: 50px; border-top: 1px solid #2c3e50; padding-top: 20px;">
+                <div style="display: flex; justify-content: space-between;">
+                    <div style="text-align: center;">
+                        <p style="margin-bottom: 50px;">_________________________________</p>
+                        <p><strong>Assinatura do Funcionário</strong></p>
+                        <p style="font-size: 11px; color: #7f8c8d;">${employee}</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <p style="margin-bottom: 50px;">_________________________________</p>
+                        <p><strong>Responsável pelo Departamento Pessoal</strong></p>
+                        <p style="font-size: 11px; color: #7f8c8d;">Excelencia Lingerie LTDA</p>
+                    </div>
+                </div>
+                <p style="text-align: center; margin-top: 20px; font-size: 10px; color: #95a5a6;">
+                    Documento gerado automaticamente pelo Sistema Excellencia HR
+                </p>
+            </div>
+        `;
+    }
+    
+    html += `</div>`;
+    
+    // Mostrar preview
+    document.getElementById('mirror-preview-content').innerHTML = html;
+    openModal('mirror-preview-modal');
+}
+
+// NOVO: Baixar espelho em PDF
+function downloadMirrorPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    
+    const element = document.getElementById('mirror-content');
+    
+    // Usar html2canvas para converter HTML em imagem
+    html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false
+    }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = 210; // A4 width in mm
+        const pageHeight = 297; // A4 height in mm
+        const imgHeight = canvas.height * imgWidth / canvas.width;
+        
+        let heightLeft = imgHeight;
+        let position = 0;
+        
+        doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+        
+        while (heightLeft >= 0) {
+            position = heightLeft - imgHeight;
+            doc.addPage();
+            doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+        }
+        
+        const employee = document.getElementById('mirror-employee-select').value;
+        const startDate = document.getElementById('mirror-start-date').value;
+        const endDate = document.getElementById('mirror-end-date').value;
+        
+        doc.save(`espelho_ponto_${employee}_${startDate}_a_${endDate}.pdf`);
+        showNotification('Espelho de ponto baixado em PDF com sucesso!', 'success');
+    });
+}
+
+// NOVO: Imprimir espelho
+function printMirror() {
+    const element = document.getElementById('mirror-content');
+    const originalContent = document.body.innerHTML;
+    
+    document.body.innerHTML = element.outerHTML;
+    window.print();
+    document.body.innerHTML = originalContent;
+    location.reload();
+}
 
         function calculateCarnivalDate(year) {
             const easter = calculateEasterDate(year);
@@ -6287,6 +7080,13 @@
             window.saveDayOff = saveDayOff;
             window.loadEmployeeDaysOff = loadEmployeeDaysOff;
             window.deleteDayOff = deleteDayOff;
+            window.downloadExcelTemplate = downloadExcelTemplate;
+            window.generateMirrorPDF = generateMirrorPDF;
+            window.generatePeriodMirrorPDF = generatePeriodMirrorPDF;
+            window.previewMirror = previewMirror;
+            window.downloadMirrorPDF = downloadMirrorPDF;
+            window.printMirror = printMirror;
+            window.initMirrorPeriodModal = initMirrorPeriodModal;
         }
     </script>
 </body>
